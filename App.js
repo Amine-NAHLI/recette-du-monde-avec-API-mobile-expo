@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { StyleSheet, View, Text, ScrollView, FlatList, useWindowDimensions, SafeAreaView, ActivityIndicator, StatusBar, TouchableOpacity } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { StyleSheet, View, Text, ScrollView, FlatList, useWindowDimensions, SafeAreaView, ActivityIndicator, StatusBar, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { Feather, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // IMPORTING FROM RESTAURANT FOLDER
@@ -19,6 +19,8 @@ import FilterSection from './restaurant/components/FilterSection';
 // VIEWS
 import HomeView from './restaurant/views/HomeView';
 import RecipeView from './restaurant/views/RecipeView';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function App() {
   const { width: windowWidth } = useWindowDimensions();
@@ -66,7 +68,7 @@ export default function App() {
       }
       setCuisinesDict(newDict);
     } catch (e) {
-      setError("Erreur de connexion au serveur culinaire.");
+      setError("ERREUR_SYSTÈME: FLUX INTERROMPU");
     }
     setInitLoading(false);
   }, []);
@@ -139,100 +141,135 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+      <StatusBar barStyle="light-content" backgroundColor="#000" />
+      
+      {/* STRUCTURE: FLOATING HEADER */}
       <Header isMobile={isMobile} goFavorites={goFavorites} favCount={favorites.length} />
 
       <ScrollView 
         ref={scrollRef}
-        contentContainerStyle={[styles.mainScroll, { padding: getPadding(isMobile) }]}
+        showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={page === 'dishes' ? [1] : []}
+        contentContainerStyle={[styles.mainScroll, { paddingBottom: 100 }]}
       >
-        {page !== 'home' && (
-          <Breadcrumbs 
-            page={page} isMobile={isMobile} goHome={goHome} goCuisines={goCuisines} 
-            openCuisine={openCuisine} selectedCuisine={selectedCuisine}
-            dishName={page === 'recipe' && recipeCache[selectedDishId]?.name}
-          />
-        )}
-
-        {error && (
-          <View style={styles.errorCard}>
-            <Feather name="wifi-off" size={32} color={COLORS.secondary} />
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryBtn} onPress={loadContent}>
-              <Text style={styles.retryText}>RÉESSAYER</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {(initLoading || loading) && (
-          <View style={styles.loader}>
-            <ActivityIndicator size="large" color={COLORS.secondary} />
-            <Text style={styles.loaderText}>CHARGEMENT...</Text>
-          </View>
-        )}
-
-        {page === 'home' && (
-          <HomeView isMobile={isMobile} setPage={setPage} areasCount={areas.length} recipesCount={totalRecipesCount} />
-        )}
-
-        {(page === 'cuisines' || page === 'dishes' || page === 'favorites') && (
-          <View>
-            <View style={styles.sectionHeaderLine}>
-              <Text style={styles.pageHeaderTitle}>
-                {page === 'cuisines' ? 'NOS CUISINES' : page === 'favorites' ? 'VOS FAVORIS' : selectedCuisine.toUpperCase()}
-              </Text>
-            </View>
-            
-            {page === 'cuisines' && (
-              <FilterSection 
-                showFilter={showFilter} setShowFilter={setShowFilter} 
-                filterCountry={filterCountry} setFilterCountry={setFilterCountry} 
-                areas={areas} 
+        <View style={styles.pageBody}>
+          {/* STRUCTURE: DYNAMIC BREADCRUMBS */}
+          {page !== 'home' && (
+            <View style={{ paddingHorizontal: getPadding(isMobile) }}>
+              <Breadcrumbs 
+                page={page} isMobile={isMobile} goHome={goHome} goCuisines={goCuisines} 
+                openCuisine={openCuisine} selectedCuisine={selectedCuisine}
+                dishName={page === 'recipe' && recipeCache[selectedDishId]?.name}
               />
-            )}
-            
-            {page === 'favorites' && favorites.length === 0 ? (
-              <View style={styles.errorCard}>
-                <Feather name="heart" size={32} color={COLORS.border} />
-                <Text style={styles.errorText}>Vous n'avez pas encore de favoris.</Text>
-                <TouchableOpacity style={styles.retryBtn} onPress={goCuisines}>
-                  <Text style={styles.retryText}>DÉCOUVRIR DES PLATS</Text>
-                </TouchableOpacity>
+            </View>
+          )}
+
+          {error && (
+            <View style={styles.errorBanner}>
+              <MaterialCommunityIcons name="wifi-off" size={24} color={COLORS.secondary} />
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity onPress={loadContent}><Text style={styles.retryLink}>RÉESSAYER</Text></TouchableOpacity>
+            </View>
+          )}
+
+          {(initLoading || loading) && (
+            <View style={styles.globalLoader}>
+              <ActivityIndicator size="large" color={COLORS.secondary} />
+            </View>
+          )}
+
+          {/* MAIN VIEWPORT */}
+          {page === 'home' && (
+            <HomeView isMobile={isMobile} setPage={setPage} areasCount={areas.length} recipesCount={totalRecipesCount} />
+          )}
+
+          {(page === 'cuisines' || page === 'dishes' || page === 'favorites') && (
+            <View style={{ paddingHorizontal: getPadding(isMobile) }}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.titleCode}>MOD_SECTION_01</Text>
+                <Text style={styles.mainTitle}>
+                  {page === 'cuisines' ? 'RÉSEAU GLOBAL' : page === 'favorites' ? 'VOS ARCHIVES' : selectedCuisine.toUpperCase()}
+                </Text>
               </View>
-            ) : (
-              <FlatList
-                data={page === 'cuisines' ? cuisinesList : page === 'favorites' ? favorites : cuisinesDict[selectedCuisine]}
-                keyExtractor={(item) => item.cuisine || item.idMeal}
-                numColumns={getCols(isMobile, isTablet)}
-                key={getCols(isMobile, isTablet)}
-                renderItem={({ item }) => (
-                  <Card 
-                    item={item} type={page === 'cuisines' ? 'c' : 'd'} 
-                    width={getCardWidth(windowWidth, isMobile, isTablet)}
+
+              {page === 'cuisines' && (
+                <FilterSection 
+                  showFilter={showFilter} setShowFilter={setShowFilter} 
+                  filterCountry={filterCountry} setFilterCountry={setFilterCountry} 
+                  areas={areas} 
+                />
+              )}
+
+              {/* STRUCTURE: HERO ITEM (IF DISHES) */}
+              {page === 'dishes' && cuisinesDict[selectedCuisine]?.length > 0 && (
+                <View style={styles.heroDishBox}>
+                   <Card 
+                    item={cuisinesDict[selectedCuisine][0]} type="d" 
+                    width={windowWidth - getPadding(isMobile)*2}
                     openCuisine={openCuisine} openRecipe={openRecipe} 
                     toggleFavorite={toggleFavorite} isFavorite={isFavorite}
                     getFlagUrl={(a) => getFlagUrl(a, cuisineData)}
                     selectedCuisine={selectedCuisine}
                   />
-                )}
-                scrollEnabled={false}
-                columnWrapperStyle={getCols(isMobile, isTablet) > 1 ? { gap: 24 } : null}
-              />
-            )}
-          </View>
-        )}
+                  <View style={styles.heroBadge}><Text style={styles.heroBadgeText}>À LA UNE</Text></View>
+                </View>
+              )}
 
-        {page === 'recipe' && recipeCache[selectedDishId] && (
-          <RecipeView 
-            recipe={recipeCache[selectedDishId]} isMobile={isMobile} 
-            toggleFavorite={toggleFavorite} isFavorite={isFavorite}
-            selectedCuisine={selectedCuisine}
-          />
-        )}
+              {page === 'favorites' && favorites.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Ionicons name="scan-outline" size={80} color="rgba(255,255,255,0.05)" />
+                  <Text style={styles.emptyText}>AUCUNE DONNÉE FAVORITE DÉTECTÉE.</Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={page === 'dishes' ? cuisinesDict[selectedCuisine].slice(1) : (page === 'cuisines' ? cuisinesList : favorites)}
+                  keyExtractor={(item) => item.cuisine || item.idMeal}
+                  numColumns={getCols(isMobile, isTablet)}
+                  key={getCols(isMobile, isTablet)}
+                  renderItem={({ item }) => (
+                    <Card 
+                      item={item} type={page === 'cuisines' ? 'c' : 'd'} 
+                      width={getCardWidth(windowWidth, isMobile, isTablet)}
+                      openCuisine={openCuisine} openRecipe={openRecipe} 
+                      toggleFavorite={toggleFavorite} isFavorite={isFavorite}
+                      getFlagUrl={(a) => getFlagUrl(a, cuisineData)}
+                      selectedCuisine={selectedCuisine}
+                    />
+                  )}
+                  scrollEnabled={false}
+                  columnWrapperStyle={getCols(isMobile, isTablet) > 1 ? { gap: 24 } : null}
+                />
+              )}
+            </View>
+          )}
+
+          {page === 'recipe' && recipeCache[selectedDishId] && (
+            <RecipeView 
+              recipe={recipeCache[selectedDishId]} isMobile={isMobile} 
+              toggleFavorite={toggleFavorite} isFavorite={isFavorite}
+              selectedCuisine={selectedCuisine}
+            />
+          )}
+        </View>
       </ScrollView>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>SAVEUR DU MONDE BY AMINE NAHLI</Text>
+      {/* STRUCTURE: PERSISTENT BOTTOM NAV */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity style={styles.navItem} onPress={goHome}>
+          <Feather name="home" size={24} color={page === 'home' ? COLORS.secondary : '#FFF'} />
+          <Text style={[styles.navText, page === 'home' && { color: COLORS.secondary }]}>DASHBOARD</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={goCuisines}>
+          <Feather name="compass" size={24} color={(page === 'cuisines' || page === 'dishes') ? COLORS.secondary : '#FFF'} />
+          <Text style={[styles.navText, (page === 'cuisines' || page === 'dishes') && { color: COLORS.secondary }]}>EXPLORER</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={goFavorites}>
+          <View>
+            <Feather name="heart" size={24} color={page === 'favorites' ? COLORS.accent : '#FFF'} />
+            {favorites.length > 0 && <View style={styles.navBadge} />}
+          </View>
+          <Text style={[styles.navText, page === 'favorites' && { color: COLORS.accent }]}>ARCHIVES</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -241,14 +278,34 @@ export default function App() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   mainScroll: { alignSelf: 'center', width: '100%', maxWidth: 1200 },
-  pageHeaderTitle: { fontSize: 32, fontWeight: '900', color: COLORS.primary, letterSpacing: 1.5, marginBottom: 32, textAlign: 'center' },
-  sectionHeaderLine: { marginBottom: 24 },
-  loader: { padding: 40, alignItems: 'center' },
-  loaderText: { color: COLORS.textLight, marginTop: 12, fontWeight: '700', letterSpacing: 1 },
-  errorCard: { backgroundColor: COLORS.card, borderRadius: 16, padding: 40, alignItems: 'center', marginBottom: 24, borderWidth: 1, borderColor: COLORS.border },
-  errorText: { color: COLORS.text, fontSize: 14, fontWeight: '700', marginVertical: 16, textAlign: 'center' },
-  retryBtn: { backgroundColor: COLORS.secondary, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8 },
-  retryText: { color: '#FFFFFF', fontWeight: '800', fontSize: 12 },
-  footer: { backgroundColor: COLORS.primary, paddingVertical: 20, alignItems: 'center' },
-  footerText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700', letterSpacing: 2, opacity: 0.8 },
+  pageBody: { paddingTop: 110 },
+  sectionHeader: { marginBottom: 32 },
+  titleCode: { color: COLORS.secondary, fontSize: 10, fontWeight: '900', letterSpacing: 3, marginBottom: 8 },
+  mainTitle: { color: '#FFF', fontSize: 32, fontWeight: '900', letterSpacing: 1 },
+  errorBanner: { backgroundColor: 'rgba(255,0,0,0.1)', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderLeftWidth: 4, borderLeftColor: COLORS.accent },
+  errorText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
+  retryLink: { color: COLORS.secondary, fontWeight: '900', textDecorationLine: 'underline' },
+  globalLoader: { padding: 40, alignItems: 'center' },
+  heroDishBox: { marginBottom: 32, position: 'relative' },
+  heroBadge: { position: 'absolute', top: 20, left: 20, backgroundColor: COLORS.secondary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 4 },
+  heroBadgeText: { color: '#000', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+  emptyState: { alignItems: 'center', paddingVertical: 80, gap: 20 },
+  emptyText: { color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: '900', letterSpacing: 2 },
+  bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 85,
+    backgroundColor: '#0A0A0A',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingBottom: 25,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)',
+  },
+  navItem: { alignItems: 'center', gap: 6 },
+  navText: { color: '#FFF', fontSize: 9, fontWeight: '900', letterSpacing: 1 },
+  navBadge: { position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.secondary },
 });

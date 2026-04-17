@@ -1,30 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, StatusBar, Animated, Easing } from 'react-native';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 
 const MESSAGES = [
-  "Préparation des recettes...",
-  "Exploration des cuisines...",
-  "Découverte des saveurs...",
-  "Mise en place des ingrédients..."
+  "INSPIRATIONS CULINAIRES...",
+  "VOYAGE GASTRONOMIQUE...",
+  "SÉLECTION DES CHEFS...",
+  "DÉCOUVREZ LE MONDE..."
 ];
 
 const LoadingScreen = ({ onFinish }) => {
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
+  const fadeAnim = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+
     const progressInterval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(progressInterval);
-          setTimeout(onFinish, 500); 
+          setTimeout(onFinish, 800); 
           return 100;
         }
-        return prev + 2;
+        return prev + 1;
       });
-    }, 100);
+    }, 30);
 
     const messageInterval = setInterval(() => {
       setMessageIndex(prev => (prev + 1) % MESSAGES.length);
@@ -38,50 +45,113 @@ const LoadingScreen = ({ onFinish }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       
-      <View style={styles.logoContainer}>
-        <MaterialIcons name="restaurant" size={48} color={COLORS.secondary} />
-      </View>
-
-      <Text style={styles.titleMain}>RESTAURANT</Text>
-      <Text style={styles.titleSub}>DU MONDE</Text>
-
-      <View style={styles.progressWrapper}>
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${progress}%` }]} />
+      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+        <View style={styles.logoCircle}>
+          <Feather name="map" size={48} color={COLORS.secondary} />
         </View>
-      </View>
 
-      <Text style={styles.percentageText}>{Math.round(progress)}%</Text>
-      <Text style={styles.statusMessage}>{MESSAGES[messageIndex]}</Text>
+        <Text style={styles.titleMain}>SAVEURS DU MONDE</Text>
+        <Text style={styles.titleSub}>L'ART DU GOÛT</Text>
 
-      <View style={styles.footerDecoration}>
-        <View style={styles.decoLine} />
-        <Text style={styles.decoText}>CHARGEMENT</Text>
-        <View style={styles.decoLine} />
+        <View style={styles.progressContainer}>
+          <View style={styles.track}>
+            <View style={[styles.fill, { width: `${progress}%` }]} />
+          </View>
+          <View style={styles.progressInfo}>
+            <Text style={styles.statusMessage}>{MESSAGES[messageIndex]}</Text>
+            <Text style={styles.percentageText}>{Math.round(progress)}%</Text>
+          </View>
+        </View>
+      </Animated.View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>AMINE NAHLI COLLECTION</Text>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  logoContainer: {
-    width: 100, height: 100, backgroundColor: COLORS.primary, borderRadius: 24,
-    alignItems: 'center', justifyContent: 'center', shadowColor: COLORS.secondary,
-    shadowOpacity: 0.4, shadowRadius: 20, elevation: 12, borderWidth: 2, borderColor: COLORS.secondary, marginBottom: 28,
+  container: { 
+    flex: 1, 
+    backgroundColor: COLORS.primary, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    padding: 24 
   },
-  titleMain: { fontSize: 26, fontWeight: '800', color: COLORS.primary, letterSpacing: 2, marginBottom: 4 },
-  titleSub: { fontSize: 14, fontWeight: '400', color: COLORS.secondary, letterSpacing: 6, marginBottom: 48 },
-  progressWrapper: { width: '70%', marginBottom: 16 },
-  track: { width: '100%', height: 3, backgroundColor: '#E8E0D5', borderRadius: 2, overflow: 'hidden' },
-  fill: { height: '100%', backgroundColor: COLORS.secondary, borderRadius: 2 },
-  percentageText: { fontSize: 13, fontWeight: '700', color: COLORS.primary, letterSpacing: 1, marginBottom: 8 },
-  statusMessage: { fontSize: 12, color: '#7A7A7A', fontStyle: 'italic', letterSpacing: 0.5 },
-  footerDecoration: { position: 'absolute', bottom: 40, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  decoLine: { width: 30, height: 1, backgroundColor: COLORS.secondary },
-  decoText: { fontSize: 10, color: '#7A7A7A', letterSpacing: 2, fontWeight: '600' },
+  content: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  logoCircle: {
+    width: 120, 
+    height: 120, 
+    backgroundColor: 'rgba(255,255,255,0.05)', 
+    borderRadius: 60,
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    marginBottom: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  titleMain: { 
+    fontSize: 28, 
+    fontWeight: '900', 
+    color: '#FFFFFF', 
+    letterSpacing: 4, 
+    marginBottom: 8 
+  },
+  titleSub: { 
+    fontSize: 12, 
+    fontWeight: '700', 
+    color: COLORS.secondary, 
+    letterSpacing: 8, 
+    marginBottom: 60 
+  },
+  progressContainer: { 
+    width: '80%', 
+  },
+  track: { 
+    width: '100%', 
+    height: 4, 
+    backgroundColor: 'rgba(255,255,255,0.1)', 
+    borderRadius: 2, 
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  fill: { 
+    height: '100%', 
+    backgroundColor: COLORS.secondary, 
+    borderRadius: 2 
+  },
+  progressInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  percentageText: { 
+    fontSize: 14, 
+    fontWeight: '900', 
+    color: '#FFF', 
+  },
+  statusMessage: { 
+    fontSize: 10, 
+    color: 'rgba(255,255,255,0.5)', 
+    fontWeight: '700',
+    letterSpacing: 1 
+  },
+  footer: { 
+    position: 'absolute', 
+    bottom: 60,
+  },
+  footerText: { 
+    fontSize: 10, 
+    color: 'rgba(255,255,255,0.3)', 
+    letterSpacing: 2, 
+    fontWeight: '800' 
+  },
 });
 
 export default LoadingScreen;
