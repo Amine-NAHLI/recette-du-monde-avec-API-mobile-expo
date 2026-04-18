@@ -137,10 +137,15 @@ export default function App() {
     return Object.values(cuisinesDict).reduce((acc, list) => acc + list.length, 0);
   }, [cuisinesDict]);
 
-  if (!ready) return <LoadingScreen onFinish={() => setReady(true)} />;
+  if (!ready) return (
+    <View style={{ flex: 1 }}>
+      <LoadingScreen onFinish={() => setReady(true)} />
+    </View>
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={{ flex: 1 }}>
+      <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       
       <Header isMobile={isMobile} goFavorites={goFavorites} favCount={favorites.length} />
@@ -271,8 +276,8 @@ export default function App() {
           <Text style={[styles.navText, page === 'favorites' && { color: COLORS.secondary }]}>FAVORIS</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
-
+      </SafeAreaView>
+    </View>
   );
 }
 

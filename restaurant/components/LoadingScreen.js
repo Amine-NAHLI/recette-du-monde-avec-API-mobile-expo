@@ -25,19 +25,19 @@ const LoadingScreen = ({ onFinish }) => {
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 1500,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.spring(logoScale, {
         toValue: 1,
         friction: 4,
         tension: 10,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.timing(lineScale, {
         toValue: 1,
         duration: 2000,
         easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
+        useNativeDriver: false,
       })
     ]).start();
 
@@ -48,7 +48,7 @@ const LoadingScreen = ({ onFinish }) => {
           Animated.timing(fadeAnim, {
              toValue: 0,
              duration: 500,
-             useNativeDriver: true
+             useNativeDriver: false
           }).start(() => onFinish());
           return 100;
         }
@@ -84,11 +84,11 @@ const LoadingScreen = ({ onFinish }) => {
 
         <View style={styles.progressSection}>
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${progress}%` }]} />
+            <View style={[styles.progressFill, { width: progress + '%' }]} />
           </View>
           <View style={styles.progressMeta}>
             <Text style={styles.message}>{MESSAGES[messageIndex]}</Text>
-            <Text style={styles.percentage}>{Math.round(progress)}%</Text>
+            <Text style={styles.percentage}>{`${Math.round(progress)}%`}</Text>
           </View>
         </View>
       </Animated.View>

@@ -11,8 +11,8 @@ const RecipeView = ({ recipe, isMobile, toggleFavorite, isFavorite, selectedCuis
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(contentFade, { toValue: 1, duration: 1000, useNativeDriver: true }),
-      Animated.spring(slideIn, { toValue: 0, friction: 8, useNativeDriver: true })
+      Animated.timing(contentFade, { toValue: 1, duration: 1000, useNativeDriver: false }),
+      Animated.spring(slideIn, { toValue: 0, friction: 8, useNativeDriver: false })
     ]).start();
   }, []);
 

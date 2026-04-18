@@ -1,14 +1,12 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Platform, Alert } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 
 const Header = ({ isMobile, goFavorites, favCount }) => (
   <View style={styles.outerContainer}>
     <View style={[styles.header, isMobile && styles.headerMobile]}>
-      <TouchableOpacity style={styles.iconBtn}>
-        <Feather name="menu" size={20} color={COLORS.secondary} />
-      </TouchableOpacity>
+      <View style={{ width: 40 }} />
       
       <View style={styles.brandContainer}>
         <Text style={styles.brandMain}>RÉSERVE</Text>

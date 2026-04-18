@@ -22,17 +22,17 @@ const HomeView = ({ isMobile, setPage, areasCount, recipesCount }) => {
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 1200,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.spring(slideAnim, {
         toValue: 0,
         friction: 8,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.timing(scaleImage, {
         toValue: 1,
         duration: 2000,
-        useNativeDriver: true,
+        useNativeDriver: false,
       })
     ]).start();
   }, []);

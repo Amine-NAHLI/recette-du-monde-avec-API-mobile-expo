@@ -18,13 +18,13 @@ const Card = ({ item, type, width, openCuisine, openRecipe, toggleFavorite, isFa
         toValue: 1,
         duration: 800,
         delay: index * 80,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.timing(scaleAnim, {
         toValue: 1,
         duration: 800,
         delay: index * 80,
-        useNativeDriver: true,
+        useNativeDriver: false,
         easing: Easing.out(Easing.quad),
       })
     ]).start();
@@ -33,7 +33,7 @@ const Card = ({ item, type, width, openCuisine, openRecipe, toggleFavorite, isFa
   const handlePressIn = () => {
     Animated.spring(pressAnim, {
       toValue: 0.97,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   };
 
@@ -41,7 +41,7 @@ const Card = ({ item, type, width, openCuisine, openRecipe, toggleFavorite, isFa
     Animated.spring(pressAnim, {
       toValue: 1,
       friction: 4,
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   };
 
