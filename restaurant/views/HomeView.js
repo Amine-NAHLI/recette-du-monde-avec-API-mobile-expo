@@ -1,119 +1,106 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Dimensions, ScrollView, Animated, Easing } from 'react-native';
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Dimensions, ScrollView, Animated, Platform } from 'react-native';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-const TOP_REGIONS = [
-  { name: 'Italian', icon: 'pizza' },
-  { name: 'Chinese', icon: 'food-variant' },
-  { name: 'French', icon: 'baguette' },
-  { name: 'Japanese', icon: 'noodle' },
+const PRESTIGE_REGIONS = [
+  { name: 'Italie', icon: 'pizza-outline', desc: 'Trésors Méditerranéens' },
+  { name: 'Chine', icon: 'restaurant-outline', desc: 'Dynasties Épicées' },
+  { name: 'France', icon: 'wine-outline', desc: 'Haute Gastronomie' },
+  { name: 'Japon', icon: 'leaf-outline', desc: 'Sérénité Culinaire' },
 ];
 
 const HomeView = ({ isMobile, setPage, areasCount, recipesCount }) => {
-  // ADVANCED ANIMATIONS
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glitchAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const scaleImage = useRef(new Animated.Value(1.1)).current;
 
   useEffect(() => {
-    // Entrance Sequence
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1000,
+        duration: 1200,
         useNativeDriver: true,
       }),
       Animated.spring(slideAnim, {
         toValue: 0,
-        friction: 5,
-        tension: 40,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleImage, {
+        toValue: 1,
+        duration: 2000,
         useNativeDriver: true,
       })
     ]).start();
-
-    // Loop Pulse
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.2, duration: 800, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      ])
-    ).start();
-
-    // Loop Glitch Shift
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(glitchAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-        Animated.timing(glitchAnim, { toValue: -1, duration: 100, useNativeDriver: true }),
-        Animated.timing(glitchAnim, { toValue: 0, duration: 2000, useNativeDriver: true }),
-      ])
-    ).start();
   }, []);
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-      {/* SECTION 1: DYNAMIC HERO */}
+      {/* IMMERSIVE HERO */}
       <View style={styles.heroSection}>
-        <Image 
-          source={{ uri: 'https://images.unsplash.com/photo-1514326640560-7d063ef2aed5?auto=format&fit=crop&w=1200' }} 
-          style={StyleSheet.absoluteFillObject} 
+        <Animated.Image 
+          source={{ uri: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1200' }} 
+          style={[StyleSheet.absoluteFillObject, { transform: [{ scale: scaleImage }] }]} 
         />
         <View style={styles.heroOverlay} />
         
         <View style={styles.heroContent}>
-          <View style={styles.statusBadge}>
-            <Animated.View style={[styles.pulse, { transform: [{ scale: pulseAnim }] }]} />
-            <Text style={styles.statusText}>SYSTÈME_ACTIF</Text>
+          <View style={styles.prestigeBadge}>
+            <View style={styles.crownDot} />
+            <Text style={styles.prestigeText}>SIGNATURE COLLECTION</Text>
           </View>
           
-          <Animated.View style={{ transform: [{ translateX: glitchAnim.interpolate({ inputRange: [-1, 1], outputRange: [-2, 2] }) }] }}>
-            <Text style={styles.heroTitle}>EXPLORER{"\n"}L'ORBITALE{"\n"}CULINAIRE</Text>
-          </Animated.View>
+          <Text style={styles.heroTitle}>L'EXCELLENCE{"\n"}DANS CHAQUE{"\n"}DÉTAIL</Text>
+          
+          <Text style={styles.heroSub}>
+            Une odyssée sensorielle à travers les saveurs les plus raffinées du globe.
+          </Text>
 
-          <TouchableOpacity style={styles.scanBtn} onPress={() => setPage('cuisines')}>
-            <Text style={styles.scanBtnText}>SCANNER LE RÉSEAU</Text>
-            <Feather name="maximize" size={20} color="#000" />
+          <TouchableOpacity style={styles.primaryBtn} onPress={() => setPage('cuisines')}>
+            <Text style={styles.primaryBtnText}>DÉCOUVRIR LE MONDE</Text>
+            <Ionicons name="chevron-forward" size={18} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* SECTION 2: TOP REGIONS HORIZONTAL */}
+      {/* HORIZONTAL PRESTIGE SELECTION */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionCode}>ARCH_REGIONS_v1</Text>
-          <Text style={styles.sectionTitle}>RÉGIONS PRIORITAIRES</Text>
+          <Text style={styles.sectionPre}>SÉLECTION</Text>
+          <Text style={styles.sectionTitle}>Régions de Prestige</Text>
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.regionList}>
-          {TOP_REGIONS.map((region, i) => (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.regionScroll}>
+          {PRESTIGE_REGIONS.map((region, i) => (
             <TouchableOpacity key={i} style={styles.regionCard} onPress={() => setPage('cuisines')}>
-              <MaterialCommunityIcons name={region.icon} size={32} color={COLORS.secondary} />
-              <Text style={styles.regionName}>{region.name.toUpperCase()}</Text>
+              <View style={styles.regionIconBox}>
+                <Ionicons name={region.icon} size={28} color={COLORS.secondary} />
+              </View>
+              <Text style={styles.regionName}>{region.name}</Text>
+              <Text style={styles.regionDesc}>{region.desc}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
 
-      {/* SECTION 3: SYSTEM STATS GRID */}
+      {/* METRICS / STATS */}
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionCode}>SYS_METRICS_04</Text>
-          <Text style={styles.sectionTitle}>MÉTRIQUES DU SYSTÈME</Text>
-        </View>
-        <View style={styles.statsGrid}>
+        <View style={styles.statsRow}>
           <View style={styles.statBox}>
-            <Text style={styles.statLabel}>RÉGIONS_SYNC</Text>
             <Text style={styles.statValue}>{areasCount}</Text>
+            <Text style={styles.statLabel}>CUISINES SYNC</Text>
           </View>
+          <View style={styles.statDivider} />
           <View style={styles.statBox}>
-            <Text style={styles.statLabel}>RECETTES_LOADED</Text>
             <Text style={styles.statValue}>{recipesCount}</Text>
+            <Text style={styles.statLabel}>RECETTES PRÊTES</Text>
           </View>
-          <View style={[styles.statBox, { backgroundColor: COLORS.secondary }]}>
-            <Text style={[styles.statLabel, { color: '#000' }]}>STABILITÉ</Text>
-            <Text style={[styles.statValue, { color: '#000' }]}>99.9%</Text>
+          <View style={styles.statDivider} />
+          <View style={styles.statBox}>
+            <Ionicons name="ribbon-outline" size={24} color={COLORS.secondary} />
+            <Text style={styles.statLabel}>ÉLUE APP #1</Text>
           </View>
         </View>
       </View>
@@ -122,27 +109,83 @@ const HomeView = ({ isMobile, setPage, areasCount, recipesCount }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { paddingBottom: 40 },
-  heroSection: { height: 500, borderRadius: 30, overflow: 'hidden', marginHorizontal: 20, marginBottom: 40 },
-  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)' },
-  heroContent: { flex: 1, padding: 30, justifyContent: 'center' },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.1)', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 4, marginBottom: 20 },
-  pulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.secondary },
-  statusText: { color: '#FFF', fontSize: 9, fontWeight: '900', letterSpacing: 2 },
-  heroTitle: { color: '#FFF', fontSize: 48, fontWeight: '900', lineHeight: 48, marginBottom: 30 },
-  scanBtn: { backgroundColor: COLORS.secondary, paddingVertical: 20, paddingHorizontal: 30, borderRadius: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  scanBtnText: { color: '#000', fontWeight: '900', fontSize: 12, letterSpacing: 2 },
-  section: { paddingHorizontal: 20, marginBottom: 40 },
-  sectionHeader: { marginBottom: 20 },
-  sectionCode: { color: COLORS.secondary, fontSize: 9, fontWeight: '900', letterSpacing: 3, marginBottom: 4 },
-  sectionTitle: { color: '#FFF', fontSize: 18, fontWeight: '900', letterSpacing: 1 },
-  regionList: { gap: 16 },
-  regionCard: { width: 120, height: 120, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 20, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', gap: 10 },
-  regionName: { color: '#FFF', fontSize: 9, fontWeight: '800', letterSpacing: 1 },
-  statsGrid: { flexDirection: 'row', gap: 12 },
-  statBox: { flex: 1, backgroundColor: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
-  statLabel: { color: COLORS.textLight, fontSize: 8, fontWeight: '900', letterSpacing: 1, marginBottom: 8 },
-  statValue: { color: '#FFF', fontSize: 24, fontWeight: '900' },
+  container: { paddingBottom: 60 },
+  heroSection: { height: 560, borderRadius: 0, overflow: 'hidden', marginBottom: 50 },
+  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(5,5,5,0.7)' },
+  heroContent: { flex: 1, padding: 32, justifyContent: 'center', paddingTop: 100 },
+  prestigeBadge: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 10, 
+    borderLeftWidth: 1, 
+    borderLeftColor: COLORS.secondary, 
+    paddingLeft: 12, 
+    marginBottom: 24 
+  },
+  crownDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: COLORS.secondary },
+  prestigeText: { color: COLORS.secondary, fontSize: 10, fontWeight: '800', letterSpacing: 4 },
+  heroTitle: { 
+    color: '#FFF', 
+    fontSize: 42, 
+    fontWeight: '300', 
+    lineHeight: 52, 
+    marginBottom: 24,
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+    letterSpacing: 2,
+  },
+  heroSub: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+    lineHeight: 24,
+    maxWidth: '85%',
+    marginBottom: 40,
+    fontWeight: '400',
+  },
+  primaryBtn: { 
+    backgroundColor: COLORS.secondary, 
+    paddingVertical: 18, 
+    paddingHorizontal: 28, 
+    borderRadius: 0, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    alignSelf: 'flex-start',
+    gap: 12,
+  },
+  primaryBtnText: { color: COLORS.primary, fontWeight: '900', fontSize: 11, letterSpacing: 2 },
+  section: { paddingHorizontal: 24, marginBottom: 50 },
+  sectionHeader: { marginBottom: 24 },
+  sectionPre: { color: COLORS.secondary, fontSize: 9, fontWeight: '800', letterSpacing: 4, marginBottom: 8 },
+  sectionTitle: { 
+    color: '#FFF', 
+    fontSize: 24, 
+    fontWeight: '300', 
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', 
+  },
+  regionScroll: { gap: 16 },
+  regionCard: { 
+    width: 160, 
+    padding: 24, 
+    backgroundColor: 'rgba(255,255,255,0.02)', 
+    borderRadius: 2, 
+    borderWidth: 0.5, 
+    borderColor: 'rgba(212, 175, 55, 0.1)',
+  },
+  regionIconBox: { marginBottom: 16 },
+  regionName: { color: '#FFF', fontSize: 14, fontWeight: '700', marginBottom: 4 },
+  regionDesc: { color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: '500' },
+  statsRow: { 
+    flexDirection: 'row', 
+    backgroundColor: 'rgba(255,255,255,0.01)', 
+    paddingVertical: 32, 
+    borderRadius: 2, 
+    borderWidth: 0.5, 
+    borderColor: 'rgba(212, 175, 55, 0.1)',
+  },
+  statBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  statValue: { color: '#FFF', fontSize: 28, fontWeight: '300', marginBottom: 4, fontFamily: 'serif' },
+  statLabel: { color: 'rgba(255,255,255,0.3)', fontSize: 8, fontWeight: '900', letterSpacing: 2 },
+  statDivider: { width: 0.5, height: '60%', backgroundColor: 'rgba(212, 175, 55, 0.2)', alignSelf: 'center' },
 });
 
 export default HomeView;
+

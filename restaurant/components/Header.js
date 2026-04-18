@@ -1,92 +1,99 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, BlurView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Platform } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 
 const Header = ({ isMobile, goFavorites, favCount }) => (
-  <View style={styles.headerContainer}>
-    <View style={[styles.navbar, isMobile && styles.navbarMobile]}>
-      <TouchableOpacity onPress={() => {}} style={styles.menuButton}>
-        <Feather name="grid" size={24} color={COLORS.secondary} />
+  <View style={styles.outerContainer}>
+    <View style={[styles.header, isMobile && styles.headerMobile]}>
+      <TouchableOpacity style={styles.iconBtn}>
+        <Feather name="menu" size={20} color={COLORS.secondary} />
       </TouchableOpacity>
       
-      <View style={styles.logoWrapper}>
-        <Text style={styles.logoPart1}>CULINARY</Text>
-        <Text style={styles.logoPart2}>X</Text>
+      <View style={styles.brandContainer}>
+        <Text style={styles.brandMain}>RÉSERVE</Text>
+        <View style={styles.brandDot} />
       </View>
 
-      <TouchableOpacity onPress={goFavorites} style={styles.favButton}>
-        <MaterialCommunityIcons name="heart-pulse" size={26} color={COLORS.accent} />
-        {favCount > 0 && <View style={styles.dot} />}
+      <TouchableOpacity onPress={goFavorites} style={styles.iconBtn}>
+        <MaterialCommunityIcons name="bookmark-outline" size={22} color={COLORS.secondary} />
+        {favCount > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{favCount}</Text>
+          </View>
+        )}
       </TouchableOpacity>
     </View>
   </View>
 );
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    backgroundColor: 'transparent',
+  outerContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     zIndex: 1000,
+    backgroundColor: 'rgba(5, 5, 5, 0.85)',
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(212, 175, 55, 0.15)',
   },
-  navbar: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    height: 80,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  navbarMobile: {
-    height: 100,
-    paddingTop: StatusBar.currentHeight || 40,
-  },
-  menuButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  logoWrapper: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    height: 70,
   },
-  logoPart1: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: '200',
-    letterSpacing: 4,
+  headerMobile: {
+    height: 90,
+    paddingTop: Platform.OS === 'ios' ? 40 : 10,
   },
-  logoPart2: {
-    color: COLORS.secondary,
-    fontSize: 24,
-    fontWeight: '900',
+  iconBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.02)',
   },
-  favButton: {
-    position: 'relative',
-    padding: 8,
+  brandContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  dot: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  brandMain: {
+    fontSize: 18,
+    fontWeight: '300',
+    color: COLORS.text,
+    letterSpacing: 6,
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+  },
+  brandDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
     backgroundColor: COLORS.secondary,
-    borderWidth: 2,
-    borderColor: '#000',
+    marginTop: 4,
+  },
+  badge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: COLORS.secondary,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: COLORS.primary,
   }
 });
 
 export default Header;
+

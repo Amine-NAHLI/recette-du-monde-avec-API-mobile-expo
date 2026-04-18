@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { StyleSheet, View, Text, ScrollView, FlatList, useWindowDimensions, SafeAreaView, ActivityIndicator, StatusBar, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, FlatList, useWindowDimensions, SafeAreaView, ActivityIndicator, StatusBar, TouchableOpacity, Dimensions, Animated, Platform } from 'react-native';
 import { Feather, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -141,19 +141,16 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
+      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       
-      {/* STRUCTURE: FLOATING HEADER */}
       <Header isMobile={isMobile} goFavorites={goFavorites} favCount={favorites.length} />
 
       <ScrollView 
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
-        stickyHeaderIndices={page === 'dishes' ? [1] : []}
-        contentContainerStyle={[styles.mainScroll, { paddingBottom: 100 }]}
+        contentContainerStyle={[styles.mainScroll, { paddingBottom: 120 }]}
       >
         <View style={styles.pageBody}>
-          {/* STRUCTURE: DYNAMIC BREADCRUMBS */}
           {page !== 'home' && (
             <View style={{ paddingHorizontal: getPadding(isMobile) }}>
               <Breadcrumbs 
@@ -166,7 +163,7 @@ export default function App() {
 
           {error && (
             <View style={styles.errorBanner}>
-              <MaterialCommunityIcons name="wifi-off" size={24} color={COLORS.secondary} />
+              <Ionicons name="alert-circle-outline" size={24} color={COLORS.secondary} />
               <Text style={styles.errorText}>{error}</Text>
               <TouchableOpacity onPress={loadContent}><Text style={styles.retryLink}>RÉESSAYER</Text></TouchableOpacity>
             </View>
@@ -174,7 +171,7 @@ export default function App() {
 
           {(initLoading || loading) && (
             <View style={styles.globalLoader}>
-              <ActivityIndicator size="large" color={COLORS.secondary} />
+              <ActivityIndicator size="small" color={COLORS.secondary} />
             </View>
           )}
 
@@ -186,9 +183,12 @@ export default function App() {
           {(page === 'cuisines' || page === 'dishes' || page === 'favorites') && (
             <View style={{ paddingHorizontal: getPadding(isMobile) }}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.titleCode}>MOD_SECTION_01</Text>
+                <View style={styles.headerPreBadge}>
+                  <View style={styles.badgeLine} />
+                  <Text style={styles.headerPreText}>EXPLORATION</Text>
+                </View>
                 <Text style={styles.mainTitle}>
-                  {page === 'cuisines' ? 'RÉSEAU GLOBAL' : page === 'favorites' ? 'VOS ARCHIVES' : selectedCuisine.toUpperCase()}
+                  {page === 'cuisines' ? 'Régions du Monde' : page === 'favorites' ? 'Mes Archives' : selectedCuisine}
                 </Text>
               </View>
 
@@ -200,7 +200,6 @@ export default function App() {
                 />
               )}
 
-              {/* STRUCTURE: HERO ITEM (IF DISHES) */}
               {page === 'dishes' && cuisinesDict[selectedCuisine]?.length > 0 && (
                 <View style={styles.heroDishBox}>
                    <Card 
@@ -211,14 +210,14 @@ export default function App() {
                     getFlagUrl={(a) => getFlagUrl(a, cuisineData)}
                     selectedCuisine={selectedCuisine}
                   />
-                  <View style={styles.heroBadge}><Text style={styles.heroBadgeText}>À LA UNE</Text></View>
+                  <View style={styles.heroBadge}><Text style={styles.heroBadgeText}>SÉLECTION DU CHEF</Text></View>
                 </View>
               )}
 
               {page === 'favorites' && favorites.length === 0 ? (
                 <View style={styles.emptyState}>
-                  <Ionicons name="scan-outline" size={80} color="rgba(255,255,255,0.05)" />
-                  <Text style={styles.emptyText}>AUCUNE DONNÉE FAVORITE DÉTECTÉE.</Text>
+                  <Ionicons name="restaurant-outline" size={60} color="rgba(212, 175, 55, 0.1)" />
+                  <Text style={styles.emptyText}>Votre collection est vide.</Text>
                 </View>
               ) : (
                 <FlatList
@@ -226,7 +225,7 @@ export default function App() {
                   keyExtractor={(item) => item.cuisine || item.idMeal}
                   numColumns={getCols(isMobile, isTablet)}
                   key={getCols(isMobile, isTablet)}
-                  renderItem={({ item }) => (
+                  renderItem={({ item, index }) => (
                     <Card 
                       item={item} type={page === 'cuisines' ? 'c' : 'd'} 
                       width={getCardWidth(windowWidth, isMobile, isTablet)}
@@ -234,6 +233,7 @@ export default function App() {
                       toggleFavorite={toggleFavorite} isFavorite={isFavorite}
                       getFlagUrl={(a) => getFlagUrl(a, cuisineData)}
                       selectedCuisine={selectedCuisine}
+                      index={index}
                     />
                   )}
                   scrollEnabled={false}
@@ -253,59 +253,93 @@ export default function App() {
         </View>
       </ScrollView>
 
-      {/* STRUCTURE: PERSISTENT BOTTOM NAV */}
+      {/* LUXURY TAB BAR */}
       <View style={styles.bottomNav}>
         <TouchableOpacity style={styles.navItem} onPress={goHome}>
-          <Feather name="home" size={24} color={page === 'home' ? COLORS.secondary : '#FFF'} />
-          <Text style={[styles.navText, page === 'home' && { color: COLORS.secondary }]}>DASHBOARD</Text>
+          <Ionicons name={page === 'home' ? "home" : "home-outline"} size={22} color={page === 'home' ? COLORS.secondary : '#FFF'} />
+          <Text style={[styles.navText, page === 'home' && { color: COLORS.secondary }]}>ACCUEIL</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={goCuisines}>
-          <Feather name="compass" size={24} color={(page === 'cuisines' || page === 'dishes') ? COLORS.secondary : '#FFF'} />
+          <Ionicons name={(page === 'cuisines' || page === 'dishes') ? "compass" : "compass-outline"} size={22} color={(page === 'cuisines' || page === 'dishes') ? COLORS.secondary : '#FFF'} />
           <Text style={[styles.navText, (page === 'cuisines' || page === 'dishes') && { color: COLORS.secondary }]}>EXPLORER</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={goFavorites}>
           <View>
-            <Feather name="heart" size={24} color={page === 'favorites' ? COLORS.accent : '#FFF'} />
+            <Ionicons name={page === 'favorites' ? "bookmark" : "bookmark-outline"} size={22} color={page === 'favorites' ? COLORS.secondary : '#FFF'} />
             {favorites.length > 0 && <View style={styles.navBadge} />}
           </View>
-          <Text style={[styles.navText, page === 'favorites' && { color: COLORS.accent }]}>ARCHIVES</Text>
+          <Text style={[styles.navText, page === 'favorites' && { color: COLORS.secondary }]}>FAVORIS</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   mainScroll: { alignSelf: 'center', width: '100%', maxWidth: 1200 },
-  pageBody: { paddingTop: 110 },
+  pageBody: { paddingTop: 100 },
   sectionHeader: { marginBottom: 32 },
-  titleCode: { color: COLORS.secondary, fontSize: 10, fontWeight: '900', letterSpacing: 3, marginBottom: 8 },
-  mainTitle: { color: '#FFF', fontSize: 32, fontWeight: '900', letterSpacing: 1 },
-  errorBanner: { backgroundColor: 'rgba(255,0,0,0.1)', padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, borderLeftWidth: 4, borderLeftColor: COLORS.accent },
-  errorText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
-  retryLink: { color: COLORS.secondary, fontWeight: '900', textDecorationLine: 'underline' },
-  globalLoader: { padding: 40, alignItems: 'center' },
-  heroDishBox: { marginBottom: 32, position: 'relative' },
-  heroBadge: { position: 'absolute', top: 20, left: 20, backgroundColor: COLORS.secondary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 4 },
-  heroBadgeText: { color: '#000', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
-  emptyState: { alignItems: 'center', paddingVertical: 80, gap: 20 },
-  emptyText: { color: 'rgba(255,255,255,0.3)', fontSize: 12, fontWeight: '900', letterSpacing: 2 },
+  headerPreBadge: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  badgeLine: { width: 20, height: 1, backgroundColor: COLORS.secondary },
+  headerPreText: { color: COLORS.secondary, fontSize: 10, fontWeight: '800', letterSpacing: 4 },
+  mainTitle: { 
+    color: '#FFF', 
+    fontSize: 36, 
+    fontWeight: '300', 
+    letterSpacing: 1,
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
+  },
+  errorBanner: { 
+    backgroundColor: 'rgba(212, 175, 55, 0.05)', 
+    padding: 20, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 15, 
+    borderLeftWidth: 1, 
+    borderLeftColor: COLORS.secondary 
+  },
+  errorText: { color: '#FFF', fontSize: 13, fontWeight: '400' },
+  retryLink: { color: COLORS.secondary, fontWeight: '700', textDecorationLine: 'underline', fontSize: 12 },
+  globalLoader: { padding: 60, alignItems: 'center' },
+  heroDishBox: { marginBottom: 40, position: 'relative' },
+  heroBadge: { 
+    position: 'absolute', 
+    top: 20, 
+    left: 20, 
+    backgroundColor: COLORS.secondary, 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 0 
+  },
+  heroBadgeText: { color: COLORS.primary, fontSize: 9, fontWeight: '900', letterSpacing: 2 },
+  emptyState: { alignItems: 'center', paddingVertical: 100, gap: 24 },
+  emptyText: { color: 'rgba(255,255,255,0.4)', fontSize: 14, fontWeight: '300', letterSpacing: 1 },
   bottomNav: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: 85,
-    backgroundColor: '#0A0A0A',
+    height: 90,
+    backgroundColor: 'rgba(10, 10, 11, 0.98)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingBottom: 25,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
+    paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+    borderTopWidth: 0.5,
+    borderTopColor: 'rgba(212, 175, 55, 0.15)',
   },
   navItem: { alignItems: 'center', gap: 6 },
-  navText: { color: '#FFF', fontSize: 9, fontWeight: '900', letterSpacing: 1 },
-  navBadge: { position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.secondary },
+  navText: { color: 'rgba(255,255,255,0.5)', fontSize: 9, fontWeight: '600', letterSpacing: 1 },
+  navBadge: { 
+    position: 'absolute', 
+    top: -2, 
+    right: -2, 
+    width: 6, 
+    height: 6, 
+    borderRadius: 3, 
+    backgroundColor: COLORS.secondary 
+  },
 });
+

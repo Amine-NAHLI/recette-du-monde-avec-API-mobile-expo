@@ -1,41 +1,64 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar, Animated, Easing } from 'react-native';
-import { Feather, MaterialIcons } from '@expo/vector-icons';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, StatusBar, Animated, Easing, Dimensions } from 'react-native';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/theme';
 
+const { width } = Dimensions.get('window');
+
 const MESSAGES = [
-  "INSPIRATIONS CULINAIRES...",
-  "VOYAGE GASTRONOMIQUE...",
-  "SÉLECTION DES CHEFS...",
-  "DÉCOUVREZ LE MONDE..."
+  "ÉVEIL DES SENS...",
+  "L'EXCELLENCE DÉLIVRÉE...",
+  "L'ART DE LA TABLE...",
+  "SIGNATURE CULINAIRE..."
 ];
 
 const LoadingScreen = ({ onFinish }) => {
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
-  const fadeAnim = useState(new Animated.Value(0))[0];
+  
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0.8)).current;
+  const lineScale = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1500,
+        useNativeDriver: true,
+      }),
+      Animated.spring(logoScale, {
+        toValue: 1,
+        friction: 4,
+        tension: 10,
+        useNativeDriver: true,
+      }),
+      Animated.timing(lineScale, {
+        toValue: 1,
+        duration: 2000,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      })
+    ]).start();
 
     const progressInterval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(progressInterval);
-          setTimeout(onFinish, 800); 
+          Animated.timing(fadeAnim, {
+             toValue: 0,
+             duration: 500,
+             useNativeDriver: true
+          }).start(() => onFinish());
           return 100;
         }
         return prev + 1;
       });
-    }, 30);
+    }, 25);
 
     const messageInterval = setInterval(() => {
       setMessageIndex(prev => (prev + 1) % MESSAGES.length);
-    }, 1500);
+    }, 1800);
 
     return () => {
       clearInterval(progressInterval);
@@ -48,26 +71,30 @@ const LoadingScreen = ({ onFinish }) => {
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <View style={styles.logoCircle}>
-          <Feather name="map" size={48} color={COLORS.secondary} />
+        <Animated.View style={[styles.logoWrapper, { transform: [{ scale: logoScale }] }]}>
+          <Ionicons name="restaurant-outline" size={56} color={COLORS.secondary} />
+          <View style={styles.brandRing} />
+        </Animated.View>
+
+        <Text style={styles.brandName}>LA RÉSERVE</Text>
+        <View style={styles.divider}>
+          <Animated.View style={[styles.dividerFill, { transform: [{ scaleX: lineScale }] }]} />
         </View>
+        <Text style={styles.brandTagline}>Symphonie Gastronomique</Text>
 
-        <Text style={styles.titleMain}>SAVEURS DU MONDE</Text>
-        <Text style={styles.titleSub}>L'ART DU GOÛT</Text>
-
-        <View style={styles.progressContainer}>
-          <View style={styles.track}>
-            <View style={[styles.fill, { width: `${progress}%` }]} />
+        <View style={styles.progressSection}>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${progress}%` }]} />
           </View>
-          <View style={styles.progressInfo}>
-            <Text style={styles.statusMessage}>{MESSAGES[messageIndex]}</Text>
-            <Text style={styles.percentageText}>{Math.round(progress)}%</Text>
+          <View style={styles.progressMeta}>
+            <Text style={styles.message}>{MESSAGES[messageIndex]}</Text>
+            <Text style={styles.percentage}>{Math.round(progress)}%</Text>
           </View>
         </View>
       </Animated.View>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>AMINE NAHLI COLLECTION</Text>
+      <View style={styles.signature}>
+        <Text style={styles.signatureText}>EXCLUSIVEMENT PAR AMINE NAHLI</Text>
       </View>
     </View>
   );
@@ -79,79 +106,96 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary, 
     alignItems: 'center', 
     justifyContent: 'center', 
-    padding: 24 
+    padding: 30 
   },
   content: {
     alignItems: 'center',
     width: '100%',
   },
-  logoCircle: {
-    width: 120, 
-    height: 120, 
-    backgroundColor: 'rgba(255,255,255,0.05)', 
-    borderRadius: 60,
-    alignItems: 'center', 
-    justifyContent: 'center', 
+  logoWrapper: {
+    width: 140,
+    height: 140,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 40,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
-  titleMain: { 
-    fontSize: 28, 
-    fontWeight: '900', 
-    color: '#FFFFFF', 
-    letterSpacing: 4, 
-    marginBottom: 8 
+  brandRing: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 0.5,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
   },
-  titleSub: { 
-    fontSize: 12, 
-    fontWeight: '700', 
-    color: COLORS.secondary, 
-    letterSpacing: 8, 
-    marginBottom: 60 
+  brandName: {
+    fontSize: 36,
+    fontWeight: '300',
+    color: COLORS.text,
+    letterSpacing: 12,
+    marginBottom: 10,
+    fontFamily: 'serif',
   },
-  progressContainer: { 
-    width: '80%', 
-  },
-  track: { 
-    width: '100%', 
-    height: 4, 
-    backgroundColor: 'rgba(255,255,255,0.1)', 
-    borderRadius: 2, 
+  divider: {
+    width: 100,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    marginVertical: 15,
     overflow: 'hidden',
-    marginBottom: 16,
   },
-  fill: { 
-    height: '100%', 
-    backgroundColor: COLORS.secondary, 
-    borderRadius: 2 
+  dividerFill: {
+    flex: 1,
+    backgroundColor: COLORS.secondary,
   },
-  progressInfo: {
+  brandTagline: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: COLORS.secondary,
+    letterSpacing: 6,
+    textTransform: 'uppercase',
+    marginBottom: 80,
+  },
+  progressSection: {
+    width: '80%',
+  },
+  progressTrack: {
+    height: 1.5,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 1,
+    overflow: 'hidden',
+    marginBottom: 20,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: COLORS.secondary,
+  },
+  progressMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  percentageText: { 
-    fontSize: 14, 
-    fontWeight: '900', 
-    color: '#FFF', 
-  },
-  statusMessage: { 
-    fontSize: 10, 
-    color: 'rgba(255,255,255,0.5)', 
+  message: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.4)',
     fontWeight: '700',
-    letterSpacing: 1 
+    letterSpacing: 2,
   },
-  footer: { 
-    position: 'absolute', 
+  percentage: {
+    fontSize: 12,
+    color: COLORS.secondary,
+    fontWeight: '900',
+    fontVariant: ['tabular-nums'],
+  },
+  signature: {
+    position: 'absolute',
     bottom: 60,
   },
-  footerText: { 
-    fontSize: 10, 
-    color: 'rgba(255,255,255,0.3)', 
-    letterSpacing: 2, 
-    fontWeight: '800' 
+  signatureText: {
+    fontSize: 9,
+    color: 'rgba(255,255,255,0.2)',
+    letterSpacing: 4,
+    fontWeight: '800',
   },
 });
 
 export default LoadingScreen;
+
