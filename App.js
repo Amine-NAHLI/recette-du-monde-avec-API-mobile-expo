@@ -1,141 +1,72 @@
-import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { StyleSheet, View, Text, ScrollView, FlatList, useWindowDimensions, SafeAreaView, ActivityIndicator, StatusBar, TouchableOpacity, Dimensions, Animated, Platform } from 'react-native';
-import { Feather, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  FlatList,
+  useWindowDimensions,
+  SafeAreaView,
+  ActivityIndicator,
+  StatusBar,
+  TouchableOpacity,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-// IMPORTING FROM RESTAURANT FOLDER
 import { COLORS } from './restaurant/constants/theme';
-import { fetchCuisines, fetchDishesByCountry, fetchRecipeById } from './restaurant/services/api';
 import { getFlagUrl, getCols, getPadding, getCardWidth } from './restaurant/utils/layout';
 import { cuisineData } from './restaurant/data.js';
-
-// COMPONENTS
+import useFavorites from './restaurant/hooks/useFavorites';
+import useMealBrowser from './restaurant/hooks/useMealBrowser';
 import LoadingScreen from './restaurant/components/LoadingScreen';
 import Header from './restaurant/components/Header';
 import Breadcrumbs from './restaurant/components/Breadcrumbs';
 import Card from './restaurant/components/Card';
 import FilterSection from './restaurant/components/FilterSection';
-
-// VIEWS
+import BottomNav from './restaurant/components/BottomNav';
 import HomeView from './restaurant/views/HomeView';
 import RecipeView from './restaurant/views/RecipeView';
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+import { styles } from './restaurant/styles/appStyles';
 
 export default function App() {
   const { width: windowWidth } = useWindowDimensions();
   const isMobile = windowWidth < 768;
   const isTablet = windowWidth >= 768 && windowWidth < 1024;
-
-  const [page, setPage] = useState('home');
   const [ready, setReady] = useState(false);
-  const [selectedCuisine, setSelectedCuisine] = useState(null);
-  const [selectedDishId, setSelectedDishId] = useState(null);
-  const [cuisinesDict, setCuisinesDict] = useState({});
-  const [areas, setAreas] = useState([]);
-  const [recipeCache, setRecipeCache] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [initLoading, setInitLoading] = useState(false);
-  const [showFilter, setShowFilter] = useState(false);
-  const [filterCountry, setFilterCountry] = useState("Tous");
-  const [error, setError] = useState(null);
-  const [favorites, setFavorites] = useState([]);
   const scrollRef = useRef(null);
 
-  // FAVORITES PERSISTENCE
-  useEffect(() => {
-    const loadFavs = async () => {
-      const saved = await AsyncStorage.getItem('favorites');
-      if (saved) setFavorites(JSON.parse(saved));
-    };
-    loadFavs();
-  }, []);
+  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const {
+    page,
+    selectedCuisine,
+    selectedDishId,
+    cuisinesDict,
+    areas,
+    recipeCache,
+    loading,
+    initLoading,
+    showFilter,
+    filterCountry,
+    error,
+    setPage,
+    setShowFilter,
+    setFilterCountry,
+    loadContent,
+    openCuisine,
+    openRecipe,
+    goHome,
+    goCuisines,
+    goFavorites,
+    cuisinesList,
+    totalRecipesCount,
+  } = useMealBrowser();
 
   useEffect(() => {
-    AsyncStorage.setItem('favorites', JSON.stringify(favorites));
-  }, [favorites]);
-
-  // CONTENT LOADING
-  const loadContent = useCallback(async () => {
-    setInitLoading(true);
-    setError(null);
-    try {
-      const areaList = await fetchCuisines();
-      setAreas(areaList);
-      const newDict = {};
-      for (const area of areaList.slice(0, 10)) {
-        newDict[area] = await fetchDishesByCountry(area);
-      }
-      setCuisinesDict(newDict);
-    } catch (e) {
-      setError("ERREUR_SYSTÈME: FLUX INTERROMPU");
-    }
-    setInitLoading(false);
-  }, []);
-
-  useEffect(() => { loadContent(); }, [loadContent]);
+    loadContent();
+  }, [loadContent]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
   }, [page, selectedCuisine, selectedDishId]);
-
-  const openCuisine = async (name) => {
-    setSelectedCuisine(name);
-    setPage('dishes');
-    if (!cuisinesDict[name]) {
-      setLoading(true);
-      const meals = await fetchDishesByCountry(name);
-      setCuisinesDict(prev => ({ ...prev, [name]: meals }));
-      setLoading(false);
-    }
-  };
-
-  const openRecipe = async (id) => {
-    setSelectedDishId(id);
-    setPage('recipe');
-    if (!recipeCache[id]) {
-      setLoading(true);
-      const meal = await fetchRecipeById(id);
-      if (meal) {
-        const ingredients = [];
-        for (let i = 1; i <= 20; i++) {
-          if (meal[`strIngredient${i}`]) ingredients.push(`${meal[`strMeasure${i}`]} ${meal[`strIngredient${i}`]}`);
-        }
-        setRecipeCache(prev => ({ ...prev, [id]: {
-          idMeal: id,
-          name: meal.strMeal,
-          ingredients,
-          instructions: meal.strInstructions.split('\r\n').filter(s => s.trim().length > 10),
-          url: meal.strMealThumb
-        }}));
-      }
-      setLoading(false);
-    }
-  };
-
-  const goHome = () => { setPage('home'); setSelectedCuisine(null); setSelectedDishId(null); };
-  const goCuisines = () => { setPage('cuisines'); setSelectedCuisine(null); setSelectedDishId(null); };
-  const goFavorites = () => { setPage('favorites'); setSelectedCuisine(null); setSelectedDishId(null); };
-
-  const toggleFavorite = (meal) => {
-    const isFav = favorites.some(f => f.idMeal === meal.idMeal);
-    if (isFav) setFavorites(prev => prev.filter(f => f.idMeal !== meal.idMeal));
-    else setFavorites(prev => [...prev, meal]);
-  };
-
-  const isFavorite = (id) => favorites.some(f => f.idMeal === id);
-
-  const cuisinesList = useMemo(() => {
-    let list = areas.map(area => ({
-      cuisine: area, country: area, count: cuisinesDict[area]?.length || 0,
-      image: cuisinesDict[area]?.[0]?.strMealThumb || `https://www.themealdb.com/images/ingredients/${area}.png`
-    }));
-    return filterCountry === "Tous" ? list : list.filter(c => c.country === filterCountry);
-  }, [areas, cuisinesDict, filterCountry]);
-
-  const totalRecipesCount = useMemo(() => {
-    return Object.values(cuisinesDict).reduce((acc, list) => acc + list.length, 0);
-  }, [cuisinesDict]);
 
   if (!ready) return (
     <View style={{ flex: 1 }}>
@@ -258,93 +189,14 @@ export default function App() {
         </View>
       </ScrollView>
 
-      {/* LUXURY TAB BAR */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem} onPress={goHome}>
-          <Ionicons name={page === 'home' ? "home" : "home-outline"} size={22} color={page === 'home' ? COLORS.secondary : '#FFF'} />
-          <Text style={[styles.navText, page === 'home' && { color: COLORS.secondary }]}>ACCUEIL</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={goCuisines}>
-          <Ionicons name={(page === 'cuisines' || page === 'dishes') ? "compass" : "compass-outline"} size={22} color={(page === 'cuisines' || page === 'dishes') ? COLORS.secondary : '#FFF'} />
-          <Text style={[styles.navText, (page === 'cuisines' || page === 'dishes') && { color: COLORS.secondary }]}>EXPLORER</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={goFavorites}>
-          <View>
-            <Ionicons name={page === 'favorites' ? "bookmark" : "bookmark-outline"} size={22} color={page === 'favorites' ? COLORS.secondary : '#FFF'} />
-            {favorites.length > 0 && <View style={styles.navBadge} />}
-          </View>
-          <Text style={[styles.navText, page === 'favorites' && { color: COLORS.secondary }]}>FAVORIS</Text>
-        </TouchableOpacity>
-      </View>
+      <BottomNav
+        page={page}
+        goHome={goHome}
+        goCuisines={goCuisines}
+        goFavorites={goFavorites}
+        favoritesCount={favorites.length}
+      />
       </SafeAreaView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  mainScroll: { alignSelf: 'center', width: '100%', maxWidth: 1200 },
-  pageBody: { paddingTop: 100 },
-  sectionHeader: { marginBottom: 32 },
-  headerPreBadge: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  badgeLine: { width: 20, height: 1, backgroundColor: COLORS.secondary },
-  headerPreText: { color: COLORS.secondary, fontSize: 10, fontWeight: '800', letterSpacing: 4 },
-  mainTitle: { 
-    color: '#FFF', 
-    fontSize: 36, 
-    fontWeight: '300', 
-    letterSpacing: 1,
-    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
-  },
-  errorBanner: { 
-    backgroundColor: 'rgba(212, 175, 55, 0.05)', 
-    padding: 20, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    gap: 15, 
-    borderLeftWidth: 1, 
-    borderLeftColor: COLORS.secondary 
-  },
-  errorText: { color: '#FFF', fontSize: 13, fontWeight: '400' },
-  retryLink: { color: COLORS.secondary, fontWeight: '700', textDecorationLine: 'underline', fontSize: 12 },
-  globalLoader: { padding: 60, alignItems: 'center' },
-  heroDishBox: { marginBottom: 40, position: 'relative' },
-  heroBadge: { 
-    position: 'absolute', 
-    top: 20, 
-    left: 20, 
-    backgroundColor: COLORS.secondary, 
-    paddingHorizontal: 12, 
-    paddingVertical: 6, 
-    borderRadius: 0 
-  },
-  heroBadgeText: { color: COLORS.primary, fontSize: 9, fontWeight: '900', letterSpacing: 2 },
-  emptyState: { alignItems: 'center', paddingVertical: 100, gap: 24 },
-  emptyText: { color: 'rgba(255,255,255,0.4)', fontSize: 14, fontWeight: '300', letterSpacing: 1 },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 90,
-    backgroundColor: 'rgba(10, 10, 11, 0.98)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingBottom: Platform.OS === 'ios' ? 30 : 10,
-    borderTopWidth: 0.5,
-    borderTopColor: 'rgba(212, 175, 55, 0.15)',
-  },
-  navItem: { alignItems: 'center', gap: 6 },
-  navText: { color: 'rgba(255,255,255,0.5)', fontSize: 9, fontWeight: '600', letterSpacing: 1 },
-  navBadge: { 
-    position: 'absolute', 
-    top: -2, 
-    right: -2, 
-    width: 6, 
-    height: 6, 
-    borderRadius: 3, 
-    backgroundColor: COLORS.secondary 
-  },
-});
-
