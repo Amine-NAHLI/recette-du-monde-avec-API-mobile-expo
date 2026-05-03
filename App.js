@@ -1,9 +1,14 @@
+/**
+ * Composant racine de l application La Reserve (Expo / React Native).
+ * - En-tete, fil d Ariane, zone de defilement principale, barre du bas.
+ * - Choix de la page via useMealBrowser : home, cuisines, dishes, favorites, recipe.
+ * - Favoris persistes via useFavorites (AsyncStorage).
+ */
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
-  FlatList,
   useWindowDimensions,
   SafeAreaView,
   ActivityIndicator,
@@ -12,20 +17,19 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { COLORS } from './restaurant/constants/theme';
-import { getFlagUrl, getCols, getPadding, getCardWidth } from './restaurant/utils/layout';
-import { cuisineData } from './restaurant/data.js';
-import useFavorites from './restaurant/hooks/useFavorites';
-import useMealBrowser from './restaurant/hooks/useMealBrowser';
-import LoadingScreen from './restaurant/components/LoadingScreen';
-import Header from './restaurant/components/Header';
-import Breadcrumbs from './restaurant/components/Breadcrumbs';
-import Card from './restaurant/components/Card';
-import FilterSection from './restaurant/components/FilterSection';
-import BottomNav from './restaurant/components/BottomNav';
-import HomeView from './restaurant/views/HomeView';
-import RecipeView from './restaurant/views/RecipeView';
-import { styles } from './restaurant/styles/appStyles';
+import { COLORS } from './restaurant/logique/design/couleurs.js';
+import { getPadding } from './restaurant/logique/outils/affichage.js';
+import useFavorites from './restaurant/logique/gestionnaires/favoris.js';
+import useMealBrowser from './restaurant/logique/gestionnaires/navigation.js';
+import LoadingScreen from './restaurant/composants_partages/components/LoadingScreen';
+import Header from './restaurant/composants_partages/components/Header';
+import Breadcrumbs from './restaurant/composants_partages/components/Breadcrumbs';
+import BottomNav from './restaurant/composants_partages/components/BottomNav';
+import PageAccueil from './restaurant/ecrans/PageAccueil';
+import PageExploration from './restaurant/ecrans/PageExploration';
+import PageFavoris from './restaurant/ecrans/PageFavoris';
+import PageRecette from './restaurant/ecrans/PageRecette';
+import { styles } from './restaurant/logique/styles_globaux/styles_partages.js';
 
 export default function App() {
   const { width: windowWidth } = useWindowDimensions();
@@ -77,6 +81,7 @@ export default function App() {
   return (
     <View style={{ flex: 1 }}>
       <SafeAreaView style={styles.container}>
+      {/* [NAVIGATION GLOBALE] Header fixe + breadcrumb + contenu + navigation bas */}
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       
       <Header isMobile={isMobile} goFavorites={goFavorites} favCount={favorites.length} />
@@ -113,74 +118,44 @@ export default function App() {
 
           {/* MAIN VIEWPORT */}
           {page === 'home' && (
-            <HomeView isMobile={isMobile} setPage={setPage} areasCount={areas.length} recipesCount={totalRecipesCount} />
+            <PageAccueil isMobile={isMobile} setPage={setPage} areasCount={areas.length} recipesCount={totalRecipesCount} />
           )}
 
-          {(page === 'cuisines' || page === 'dishes' || page === 'favorites') && (
-            <View style={{ paddingHorizontal: getPadding(isMobile) }}>
-              <View style={styles.sectionHeader}>
-                <View style={styles.headerPreBadge}>
-                  <View style={styles.badgeLine} />
-                  <Text style={styles.headerPreText}>EXPLORATION</Text>
-                </View>
-                <Text style={styles.mainTitle}>
-                  {page === 'cuisines' ? 'Régions du Monde' : page === 'favorites' ? 'Mes Archives' : selectedCuisine}
-                </Text>
-              </View>
+          {(page === 'cuisines' || page === 'dishes') && (
+            <PageExploration
+              page={page}
+              isMobile={isMobile}
+              isTablet={isTablet}
+              windowWidth={windowWidth}
+              showFilter={showFilter}
+              setShowFilter={setShowFilter}
+              filterCountry={filterCountry}
+              setFilterCountry={setFilterCountry}
+              areas={areas}
+              selectedCuisine={selectedCuisine}
+              cuisinesDict={cuisinesDict}
+              cuisinesList={cuisinesList}
+              openCuisine={openCuisine}
+              openRecipe={openRecipe}
+              toggleFavorite={toggleFavorite}
+              isFavorite={isFavorite}
+            />
+          )}
 
-              {page === 'cuisines' && (
-                <FilterSection 
-                  showFilter={showFilter} setShowFilter={setShowFilter} 
-                  filterCountry={filterCountry} setFilterCountry={setFilterCountry} 
-                  areas={areas} 
-                />
-              )}
-
-              {page === 'dishes' && cuisinesDict[selectedCuisine]?.length > 0 && (
-                <View style={styles.heroDishBox}>
-                   <Card 
-                    item={cuisinesDict[selectedCuisine][0]} type="d" 
-                    width={windowWidth - getPadding(isMobile)*2}
-                    openCuisine={openCuisine} openRecipe={openRecipe} 
-                    toggleFavorite={toggleFavorite} isFavorite={isFavorite}
-                    getFlagUrl={(a) => getFlagUrl(a, cuisineData)}
-                    selectedCuisine={selectedCuisine}
-                  />
-                  <View style={styles.heroBadge}><Text style={styles.heroBadgeText}>SÉLECTION DU CHEF</Text></View>
-                </View>
-              )}
-
-              {page === 'favorites' && favorites.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <Ionicons name="restaurant-outline" size={60} color="rgba(212, 175, 55, 0.1)" />
-                  <Text style={styles.emptyText}>Votre collection est vide.</Text>
-                </View>
-              ) : (
-                <FlatList
-                  data={page === 'dishes' ? cuisinesDict[selectedCuisine].slice(1) : (page === 'cuisines' ? cuisinesList : favorites)}
-                  keyExtractor={(item) => item.cuisine || item.idMeal}
-                  numColumns={getCols(isMobile, isTablet)}
-                  key={getCols(isMobile, isTablet)}
-                  renderItem={({ item, index }) => (
-                    <Card 
-                      item={item} type={page === 'cuisines' ? 'c' : 'd'} 
-                      width={getCardWidth(windowWidth, isMobile, isTablet)}
-                      openCuisine={openCuisine} openRecipe={openRecipe} 
-                      toggleFavorite={toggleFavorite} isFavorite={isFavorite}
-                      getFlagUrl={(a) => getFlagUrl(a, cuisineData)}
-                      selectedCuisine={selectedCuisine}
-                      index={index}
-                    />
-                  )}
-                  scrollEnabled={false}
-                  columnWrapperStyle={getCols(isMobile, isTablet) > 1 ? { gap: 24 } : null}
-                />
-              )}
-            </View>
+          {page === 'favorites' && (
+            <PageFavoris
+              isMobile={isMobile}
+              isTablet={isTablet}
+              windowWidth={windowWidth}
+              favorites={favorites}
+              openRecipe={openRecipe}
+              toggleFavorite={toggleFavorite}
+              isFavorite={isFavorite}
+            />
           )}
 
           {page === 'recipe' && recipeCache[selectedDishId] && (
-            <RecipeView 
+            <PageRecette 
               recipe={recipeCache[selectedDishId]} isMobile={isMobile} 
               toggleFavorite={toggleFavorite} isFavorite={isFavorite}
               selectedCuisine={selectedCuisine}
@@ -200,3 +175,4 @@ export default function App() {
     </View>
   );
 }
+

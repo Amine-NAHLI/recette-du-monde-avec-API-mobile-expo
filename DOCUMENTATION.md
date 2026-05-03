@@ -8,30 +8,29 @@ Cette documentation explique l'architecture technique, les fonctionnalités et l
 
 Le projet est organisé selon une structure modulaire pour garantir la séparation des préoccupations (SOC - Separation of Concerns). Chaque dossier a un rôle spécifique :
 
-### 📁 `restaurant/constants/`
-- **`theme.js`** : Contient le **Design System**. Toutes les couleurs (Primaire, Secondaire, Background) sont centralisées ici. Cela permet un changement de charte graphique instantané sur toute l'application.
+Voir aussi **`restaurant/GUIDE_FICHIERS.md`** pour le récapitulatif fichier par fichier.
 
-### 📁 `restaurant/services/`
-- **`api.js`** : Gère toute la logique de communication avec l'API externe **TheMealDB**.
-    - `fetchCuisines` : Récupère la liste des régions du monde.
-    - `fetchDishesByCountry` : Récupère les plats associés à un pays spécifique.
-    - `fetchRecipeById` : Récupère les détails complets d'une recette (ingrédients, instructions).
+### 📁 `restaurant/logique/constants/`
+- **`theme.js`** : **Design system** — couleurs globales (`COLORS`) utilisées dans toute l'application.
 
-### 📁 `restaurant/utils/`
-- **`layout.js`** : Regroupe les outils de calcul pour le **Responsive Design**.
-    - `getCols` : Détermine le nombre de colonnes (1 pour mobile, 2 pour tablette, 3 pour desktop).
-    - `getCardWidth` : Calcule la largeur exacte des cartes en pixels selon la taille de l'écran.
+### 📁 `restaurant/logique/services/`
+- **`api.js`** : Réexport central des appels **TheMealDB**.
+- **`cuisines.js`** : `fetchCuisines` — liste des régions / zones culinaires.
+- **`dishes.js`** : `fetchDishesByCountry` — plats par zone (+ champ `area`).
+- **`recipes.js`** : `fetchRecipeById` — détail d'une recette (ingrédients, instructions brutes).
 
-### 📁 `restaurant/components/` (UI Atomique)
-- **`Header.js`** : Barre de navigation supérieure avec logo et compteur de favoris réactif.
-- **`Card.js`** : Composant de carte réutilisable. Affiche une image, un badge de pays et le bouton favori.
-- **`Breadcrumbs.js`** : Système de navigation hiérarchique (Fil d'Ariane) permettant de remonter les niveaux.
-- **`FilterSection.js`** : Gère le filtrage des cuisines par pays avec une fenêtre modale élégante.
-- **`LoadingScreen.js`** : Écran d'accueil animé avec barre de progression et messages cycliques.
+### 📁 `restaurant/logique/utils/`
+- **`layout.js`** : **Responsive** — drapeaux, colonnes grille, paddings, largeur des cartes.
+- **`recipeFormatter.js`** : Transformation du JSON MealDB en objet `recipe` affichable.
 
-### 📁 `restaurant/views/` (Screens dynamiques)
-- **`HomeView.js`** : Mise en page de la page d'accueil (Hero cinématique + Statistiques API).
-- **`RecipeView.js`** : Page de détail d'une recette avec gestion intelligente du double-colonne sur grand écran.
+### 📁 `restaurant/composants_partages/components/`
+- **`Header.js`**, **`Breadcrumbs.js`**, **`BottomNav.js`**, **`LoadingScreen.js`** : enveloppe commune (navigation, fil d'Ariane, chargement).
+
+### 📁 `restaurant/ecrans/` (une page = un dossier)
+- **`ecrans/accueil/HomePage.js`** : Accueil (hero + régions + stats).
+- **`ecrans/exploration/ExplorePage.js`** : Liste des cuisines ou des plats d'une cuisine ; filtre par zone.
+- **`ecrans/recette/RecipePage.js`** : Détail recette (ingrédients + étapes).
+- **`ecrans/favoris/FavoritesPage.js`** : Liste des favoris persistés.
 
 ---
 
@@ -58,7 +57,7 @@ La barre de statistiques sur l'accueil n'est pas statique. Elle calcule :
 ## 🔄 3. FLUX DE DONNÉES (DATA FLOW)
 
 1. **Initialisation** : `App.js` monte le composant. `useEffect` déclenche `loadContent`.
-2. **Chargement** : `api.js` envoie des requêtes à TheMealDB. Les pays sont stockés dans `areas`.
+2. **Chargement** : `restaurant/logique/services/` envoie des requêtes à TheMealDB. Les pays sont stockés dans `areas`.
 3. **Mise en cache** : Les plats de chaque pays sont stockés dans `cuisinesDict` pour éviter de recharger les données si l'utilisateur revient en arrière.
 4. **Détail** : Lorsqu'une recette est ouverte, ses détails (ingrédients splittés, instructions découpées par étapes) sont stockés dans `recipeCache`.
 5. **Rendu** : React ne redessine que les parties qui ont changé (ex: juste le chiffre des favoris ou la couleur du cœur).
@@ -74,3 +73,4 @@ La barre de statistiques sur l'accueil n'est pas statique. Elle calcule :
 ---
 
 **Développé avec passion pour une expérience culinaire premium.**
+

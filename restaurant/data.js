@@ -1,3 +1,7 @@
+/**
+ * Donnees locales : correspondance nom de zone / cuisine (TheMealDB) vers URL de drapeau.
+ * Utilise dans ExplorePage / Card pour enrichir les cartes cuisines hors API flags.
+ */
 export const cuisineData = [
   { name: "Algerian",     code: "dz", flag: "https://flagcdn.com/w80/dz.png" },
   { name: "American",     code: "us", flag: "https://flagcdn.com/w80/us.png" },
