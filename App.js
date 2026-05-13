@@ -10,11 +10,11 @@ import {
   Text,
   ScrollView,
   useWindowDimensions,
-  SafeAreaView,
   ActivityIndicator,
   StatusBar,
   TouchableOpacity,
 } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import { COLORS } from './restaurant/logique/design/couleurs.js';
@@ -29,6 +29,9 @@ import PageAccueil from './restaurant/ecrans/PageAccueil';
 import PageExploration from './restaurant/ecrans/PageExploration';
 import PageFavoris from './restaurant/ecrans/PageFavoris';
 import PageRecette from './restaurant/ecrans/PageRecette';
+import PageNotifications from './restaurant/ecrans/PageNotifications';
+import { setupNotifications } from './restaurant/logique/gestionnaires/notifications.js';
+import useAuth from './restaurant/logique/gestionnaires/auth.js';
 import { styles } from './restaurant/logique/styles_globaux/styles_partages.js';
 
 export default function App() {
@@ -38,7 +41,13 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const scrollRef = useRef(null);
 
-  const { favorites, toggleFavorite, isFavorite } = useFavorites();
+  const { user, promptAsync, logout } = useAuth();
+
+  useEffect(() => {
+    setupNotifications();
+  }, []);
+
+  const { favorites, toggleFavorite, isFavorite } = useFavorites(promptAsync);
   const {
     page,
     selectedCuisine,
@@ -60,6 +69,7 @@ export default function App() {
     goHome,
     goCuisines,
     goFavorites,
+    goNotifications,
     cuisinesList,
     totalRecipesCount,
   } = useMealBrowser();
@@ -79,12 +89,18 @@ export default function App() {
   );
 
   return (
-    <View style={{ flex: 1 }}>
-      <SafeAreaView style={styles.container}>
+    <SafeAreaProvider>
+      <View style={{ flex: 1 }}>
+        <SafeAreaView style={styles.container}>
       {/* [NAVIGATION GLOBALE] Header fixe + breadcrumb + contenu + navigation bas */}
       <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
       
-      <Header isMobile={isMobile} goFavorites={goFavorites} favCount={favorites.length} />
+      <Header 
+        isMobile={isMobile} 
+        goFavorites={goFavorites} 
+        goNotifications={goNotifications} 
+        favCount={favorites.length} 
+      />
 
       <ScrollView 
         ref={scrollRef}
@@ -118,7 +134,16 @@ export default function App() {
 
           {/* MAIN VIEWPORT */}
           {page === 'home' && (
-            <PageAccueil isMobile={isMobile} setPage={setPage} areasCount={areas.length} recipesCount={totalRecipesCount} />
+            <PageAccueil 
+              isMobile={isMobile} 
+              setPage={setPage} 
+              areasCount={areas.length} 
+              recipesCount={totalRecipesCount} 
+              user={user}
+              promptAsync={promptAsync}
+              logout={logout}
+              openCuisine={openCuisine}
+            />
           )}
 
           {(page === 'cuisines' || page === 'dishes') && (
@@ -159,7 +184,12 @@ export default function App() {
               recipe={recipeCache[selectedDishId]} isMobile={isMobile} 
               toggleFavorite={toggleFavorite} isFavorite={isFavorite}
               selectedCuisine={selectedCuisine}
+              user={user}
             />
+          )}
+
+          {page === 'notifications' && (
+            <PageNotifications isMobile={isMobile} />
           )}
         </View>
       </ScrollView>
@@ -169,10 +199,12 @@ export default function App() {
         goHome={goHome}
         goCuisines={goCuisines}
         goFavorites={goFavorites}
+        goNotifications={goNotifications}
         favoritesCount={favorites.length}
       />
-      </SafeAreaView>
-    </View>
+        </SafeAreaView>
+      </View>
+    </SafeAreaProvider>
   );
 }
 

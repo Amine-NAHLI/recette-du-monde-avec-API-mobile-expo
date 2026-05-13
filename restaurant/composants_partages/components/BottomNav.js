@@ -13,6 +13,7 @@ export default function BottomNav({
   goHome,
   goCuisines,
   goFavorites,
+  goNotifications,
   favoritesCount,
 }) {
   const isExplore = page === 'cuisines' || page === 'dishes';
@@ -55,6 +56,18 @@ export default function BottomNav({
         </View>
         <Text style={[styles.navText, page === 'favorites' && { color: COLORS.secondary }]}>
           FAVORIS
+        </Text>
+      </TouchableOpacity>
+
+      {/* --- BOUTON : NOTIFICATIONS --- */}
+      <TouchableOpacity style={styles.navItem} onPress={goNotifications}>
+        <Ionicons
+          name={page === 'notifications' ? 'notifications' : 'notifications-outline'}
+          size={22}
+          color={page === 'notifications' ? COLORS.secondary : '#FFF'}
+        />
+        <Text style={[styles.navText, page === 'notifications' && { color: COLORS.secondary }]}>
+          NOTIFS
         </Text>
       </TouchableOpacity>
     </View>

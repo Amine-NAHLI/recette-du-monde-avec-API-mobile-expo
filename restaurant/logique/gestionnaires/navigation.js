@@ -109,6 +109,13 @@ export default function useMealBrowser() {
     setSelectedDishId(null);
   }, []);
 
+  // Page notifications
+  const goNotifications = useCallback(() => {
+    setPage('notifications');
+    setSelectedCuisine(null);
+    setSelectedDishId(null);
+  }, []);
+
   // Liste affichee sur ExplorePage (cuisines) avec filtre filterCountry et comptage depuis cuisinesDict.
   const cuisinesList = useMemo(() => {
     const list = areas.map((area, index) => {
@@ -157,6 +164,7 @@ export default function useMealBrowser() {
     goHome,
     goCuisines,
     goFavorites,
+    goNotifications,
     cuisinesList,
     totalRecipesCount,
   };

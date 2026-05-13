@@ -6,11 +6,13 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../../logique/design/couleurs.js';
 
-const Header = ({ isMobile, goFavorites, favCount }) => (
+const Header = ({ isMobile, goFavorites, goNotifications, favCount }) => (
   <View style={styles.outerContainer}>
     <View style={[styles.header, isMobile && styles.headerMobile]}>
       {/* ESPACEUR GAUCHE (pour centrer le logo) */}
-      <View style={{ width: 40 }} />
+      <TouchableOpacity onPress={goNotifications} style={styles.iconBtn}>
+        <MaterialCommunityIcons name="bell-outline" size={22} color={COLORS.secondary} />
+      </TouchableOpacity>
 
       {/* --- LOGO DU SITE (TITRE RÉSERVE) --- */}
       <View style={styles.brandContainer}>
