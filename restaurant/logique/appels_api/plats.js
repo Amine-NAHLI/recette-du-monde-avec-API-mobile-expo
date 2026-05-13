@@ -9,3 +9,14 @@ export const fetchDishesByCountry = async (area) => {
     return [];
   }
 };
+
+/** GET plats par catégorie. */
+export const fetchByCategory = async (cat) => {
+  try {
+    const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${cat}`);
+    const data = await res.json();
+    return data.meals || [];
+  } catch (e) {
+    return [];
+  }
+};

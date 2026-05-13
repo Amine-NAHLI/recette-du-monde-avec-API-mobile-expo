@@ -4,19 +4,19 @@
  */
 import React, { useEffect, useRef } from 'react';
 import { Animated, Platform, StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { COLORS } from '../logique/design/couleurs';
 
 // --- DONNÉES STATIQUES (Régions) ---
 const PRESTIGE_REGIONS = [
-  { name: 'Italie', icon: 'pizza-outline', desc: 'Tresors Mediterraneens' },
-  { name: 'Chine', icon: 'restaurant-outline', desc: 'Dynasties Epicees' },
-  { name: 'France', icon: 'wine-outline', desc: 'Haute Gastronomie' },
-  { name: 'Japon', icon: 'leaf-outline', desc: 'Serenite Culinaire' },
+  { name: 'Italie', tech: 'Italian', icon: 'pizza-outline', desc: 'Tresors Mediterraneens' },
+  { name: 'Chine', tech: 'Chinese', icon: 'restaurant-outline', desc: 'Dynasties Epicees' },
+  { name: 'France', tech: 'French', icon: 'wine-outline', desc: 'Haute Gastronomie' },
+  { name: 'Japon', tech: 'Japanese', icon: 'leaf-outline', desc: 'Serenite Culinaire' },
 ];  
 
 // --- COMPOSANT : SECTION HERO (Bannière) ---
-const HeroSection = ({ scaleImage, setPage }) => (
+const HeroSection = ({ scaleImage, setPage, user, promptAsync, logout }) => (
   <View style={styles.heroSection}>
     <Animated.Image
       source={{ uri: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=1200' }}
@@ -30,17 +30,51 @@ const HeroSection = ({ scaleImage, setPage }) => (
       </View>
       <Text style={styles.heroTitle}>L'EXCELLENCE{'\n'}DANS CHAQUE{'\n'}DETAIL</Text>
       <Text style={styles.heroSub}>Une odyssee sensorielle a travers les saveurs les plus raffinees du globe.</Text>
-      <TouchableOpacity style={styles.primaryBtn} onPress={() => setPage('cuisines')}>
-        <Text style={styles.primaryBtnText}>DECOUVRIR LE MONDE</Text>
-        <Ionicons name="chevron-forward" size={18} color={COLORS.primary} />
-      </TouchableOpacity>
       
+      {user && (
+        <View style={styles.profileCard}>
+          <View style={styles.avatarContainer}>
+            {user.user_metadata?.avatar_url ? (
+              <Animated.Image 
+                source={{ uri: user.user_metadata.avatar_url }} 
+                style={styles.avatar} 
+              />
+            ) : (
+              <Ionicons name="person-circle" size={50} color={COLORS.secondary} />
+            )}
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.userName}>{user.user_metadata?.full_name || 'Utilisateur'}</Text>
+            <Text style={styles.userEmail}>{user.email}</Text>
+            <View style={styles.badgeMember}>
+              <Text style={styles.badgeMemberText}>MEMBRE GOURMET</Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      <View style={styles.btnGroup}>
+        <TouchableOpacity style={styles.primaryBtn} onPress={() => setPage('cuisines')}>
+          <Text style={styles.primaryBtnText}>DÉCOUVRIR LE MONDE</Text>
+          <Ionicons name="chevron-forward" size={18} color={COLORS.primary} />
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          onPress={user ? logout : promptAsync} 
+          style={[styles.primaryBtn, { backgroundColor: 'transparent', borderWidth: 1, borderColor: COLORS.secondary }]}
+        >
+          <MaterialCommunityIcons name={user ? "logout" : "google"} size={18} color={COLORS.secondary} />
+          <Text style={[styles.primaryBtnText, { color: COLORS.secondary }]}>
+            {user ? "DÉCONNEXION" : "CONNEXION"}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   </View>
 );
 
 // --- COMPOSANT : RÉGIONS DE PRESTIGE (Scroll Horizontal) ---
-const PrestigeRegions = ({ setPage }) => (
+const PrestigeRegions = ({ openCuisine }) => (
   <View style={styles.section}>
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionPre}>SELECTION</Text>
@@ -48,7 +82,7 @@ const PrestigeRegions = ({ setPage }) => (
     </View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.regionScroll}>
       {PRESTIGE_REGIONS.map((region, index) => (
-        <TouchableOpacity key={`${region.name}-${index}`} style={styles.regionCard} onPress={() => setPage('cuisines')}>
+        <TouchableOpacity key={`${region.name}-${index}`} style={styles.regionCard} onPress={() => openCuisine(region.tech)}>
           <View style={styles.regionIconBox}>
             <Ionicons name={region.icon} size={28} color={COLORS.secondary} />
           </View>
@@ -83,7 +117,7 @@ const StatsSection = ({ areasCount, recipesCount }) => (
 );
 
 // --- COMPOSANT PRINCIPAL : PAGE ACCUEIL ---
-const PageAccueil = ({ isMobile, setPage, areasCount, recipesCount }) => {
+const PageAccueil = ({ isMobile, setPage, areasCount, recipesCount, user, promptAsync, logout }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const scaleImage = useRef(new Animated.Value(1.1)).current;
@@ -99,7 +133,13 @@ const PageAccueil = ({ isMobile, setPage, areasCount, recipesCount }) => {
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
       {/* --- SECTION 1 : BANNIÈRE HERO (Image + Bouton Explorer) --- */}
-      <HeroSection scaleImage={scaleImage} setPage={setPage} />
+      <HeroSection 
+        scaleImage={scaleImage} 
+        setPage={setPage} 
+        user={user} 
+        promptAsync={promptAsync} 
+        logout={logout} 
+      />
 
       {/* --- SECTION 2 : RÉGIONS DE PRESTIGE (Italie, Chine, etc.) --- */}
       <PrestigeRegions setPage={setPage} />
@@ -123,6 +163,15 @@ const styles = StyleSheet.create({
   heroSub: { color: 'rgba(255,255,255,0.6)', fontSize: 14, lineHeight: 24, maxWidth: '85%', marginBottom: 40, fontWeight: '400' },
   primaryBtn: { backgroundColor: COLORS.secondary, paddingVertical: 18, paddingHorizontal: 28, flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 12 },
   primaryBtnText: { color: COLORS.primary, fontWeight: '900', fontSize: 11, letterSpacing: 2 },
+  btnGroup: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  profileCard: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.05)', padding: 16, borderRadius: 12, marginBottom: 24, alignItems: 'center', borderWidth: 0.5, borderColor: 'rgba(212, 175, 55, 0.2)' },
+  avatarContainer: { marginRight: 16 },
+  avatar: { width: 50, height: 50, borderRadius: 25, borderWidth: 1, borderColor: COLORS.secondary },
+  profileInfo: { flex: 1 },
+  userName: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+  userEmail: { color: 'rgba(255,255,255,0.5)', fontSize: 11, marginBottom: 6 },
+  badgeMember: { backgroundColor: COLORS.secondary, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, alignSelf: 'flex-start' },
+  badgeMemberText: { color: COLORS.primary, fontSize: 8, fontWeight: '900' },
   section: { paddingHorizontal: 24, marginBottom: 50 },
   sectionHeader: { marginBottom: 24 },
   sectionPre: { color: COLORS.secondary, fontSize: 9, fontWeight: '800', letterSpacing: 4, marginBottom: 8 },
