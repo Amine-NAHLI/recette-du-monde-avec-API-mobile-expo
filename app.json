@@ -6,12 +6,13 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "edgeToEdgeEnabled": true
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0A0B"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
