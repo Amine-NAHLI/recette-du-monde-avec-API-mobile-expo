@@ -5,90 +5,103 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import { decode } from 'base64-arraybuffer';
-import { COLORS } from '../logique/design/couleurs.js';
+import { useTheme } from '../logique/design/ThemeContext.js';
 import { supabase } from '../logique/appels_api/supabase';
 
 // --- COMPOSANT : HERO RECETTE ---
-const RecipeHero = ({ recipe, isMobile, selectedCuisine, toggleFavorite, isFavorite }) => (
+const RecipeHero = ({ recipe, isMobile, selectedCuisine, toggleFavorite, isFavorite }) => {
+  const { theme } = useTheme();
+  return (
   <View style={[styles.heroFrame, { aspectRatio: isMobile ? 4 / 3 : 21 / 9 }]}>
     <Image source={{ uri: recipe.url }} style={styles.heroImage} resizeMode="cover" />
     <View style={styles.heroShadow} />
-    <TouchableOpacity style={styles.floatingAction} onPress={() => toggleFavorite({ idMeal: recipe.idMeal, strMeal: recipe.name, strMealThumb: recipe.url, area: selectedCuisine })}>
-      <Ionicons name={isFavorite(recipe.idMeal) ? 'bookmark' : 'bookmark-outline'} size={24} color={COLORS.secondary} />
+    <TouchableOpacity style={[styles.floatingAction, { backgroundColor: theme.primary, borderColor: theme.secondary }]} onPress={() => toggleFavorite({ idMeal: recipe.idMeal, strMeal: recipe.name, strMealThumb: recipe.url, area: selectedCuisine })}>
+      <Ionicons name={isFavorite(recipe.idMeal) ? 'bookmark' : 'bookmark-outline'} size={24} color={theme.secondary} />
     </TouchableOpacity>
   </View>
-);
+  );
+};
 
 // --- COMPOSANT : RUBAN INFOS (Temps, Personnes) ---
-const RecipeRibbon = () => (
+const RecipeRibbon = () => {
+  const { theme } = useTheme();
+  return (
   <View style={styles.ribbon}>
-    <View style={styles.ribbonItem}><Ionicons name="time-outline" size={14} color={COLORS.secondary} /><Text style={styles.ribbonText}>45 MIN</Text></View>
-    <View style={styles.ribbonDot} />
-    <View style={styles.ribbonItem}><Ionicons name="people-outline" size={14} color={COLORS.secondary} /><Text style={styles.ribbonText}>4 PERSONNES</Text></View>
-    <View style={styles.ribbonDot} />
-    <View style={styles.ribbonItem}><Ionicons name="wine-outline" size={14} color={COLORS.secondary} /><Text style={styles.ribbonText}>SELECTION</Text></View>
+    <View style={styles.ribbonItem}><Ionicons name="time-outline" size={14} color={theme.secondary} /><Text style={[styles.ribbonText, { color: theme.textMuted }]}>45 MIN</Text></View>
+    <View style={[styles.ribbonDot, { backgroundColor: theme.border }]} />
+    <View style={styles.ribbonItem}><Ionicons name="people-outline" size={14} color={theme.secondary} /><Text style={[styles.ribbonText, { color: theme.textMuted }]}>4 PERSONNES</Text></View>
+    <View style={[styles.ribbonDot, { backgroundColor: theme.border }]} />
+    <View style={styles.ribbonItem}><Ionicons name="wine-outline" size={14} color={theme.secondary} /><Text style={[styles.ribbonText, { color: theme.textMuted }]}>SELECTION</Text></View>
   </View>
-);
+  );
+};
 
 // --- COMPOSANT : SECTION INGRÉDIENTS ---
-const IngredientsSection = ({ ingredients, isMobile }) => (
+const IngredientsSection = ({ ingredients, isMobile }) => {
+  const { theme } = useTheme();
+  return (
   <View style={[styles.section, !isMobile && styles.desktopCol]}>
-    <Text style={styles.sectionTitle}>Composition</Text>
+    <Text style={[styles.sectionTitle, { color: theme.secondary }]}>Composition</Text>
     <View style={styles.ingredientsList}>
       {ingredients.map((ingredient) => (
-        <View key={ingredient} style={styles.ingredientRow}><View style={styles.ingDot} /><Text style={styles.ingText}>{ingredient}</Text></View>
+        <View key={ingredient} style={styles.ingredientRow}><View style={[styles.ingDot, { backgroundColor: theme.secondary }]} /><Text style={[styles.ingText, { color: theme.textSecondary }]}>{ingredient}</Text></View>
       ))}
     </View>
   </View>
-);
+  );
+};
 
 // --- COMPOSANT : SECTION INSTRUCTIONS ---
-const InstructionsSection = ({ instructions, isMobile }) => (
+const InstructionsSection = ({ instructions, isMobile }) => {
+  const { theme } = useTheme();
+  return (
   <View style={[styles.section, !isMobile && styles.desktopCol, !isMobile && { paddingLeft: 60 }]}>
-    <Text style={styles.sectionTitle}>Elaboration</Text>
+    <Text style={[styles.sectionTitle, { color: theme.secondary }]}>Elaboration</Text>
     {instructions.map((step, index) => (
       <View key={`${step.slice(0, 20)}-${index}`} style={styles.stepBlock}>
-        <View style={styles.stepHeader}><Text style={styles.stepIndex}>{(index + 1).toString().padStart(2, '0')}</Text><View style={styles.stepLine} /></View>
-        <Text style={styles.stepContent}>{step}</Text>
+        <View style={styles.stepHeader}><Text style={[styles.stepIndex, { color: theme.secondary }]}>{(index + 1).toString().padStart(2, '0')}</Text><View style={[styles.stepLine, { backgroundColor: theme.border }]} /></View>
+        <Text style={[styles.stepContent, { color: theme.textSecondary }]}>{step}</Text>
       </View>
     ))}
   </View>
-);
+  );
+};
 
 // --- COMPOSANT : GALERIE COMMUNAUTAIRE ---
-const CommunityGallery = ({ photos, loading, userId, onDelete }) => (
+const CommunityGallery = ({ photos, loading, userId, onDelete }) => {
+  const { theme } = useTheme();
+  return (
   <View style={styles.socialSection}>
-    <Text style={styles.sectionTitle}>Réalisations de la Communauté</Text>
+    <Text style={[styles.sectionTitle, { color: theme.secondary }]}>Réalisations de la Communauté</Text>
     {loading ? (
-      <ActivityIndicator color={COLORS.secondary} />
+      <ActivityIndicator color={theme.secondary} />
     ) : photos.length === 0 ? (
-      <Text style={styles.noPhotoText}>Soyez le premier à partager votre réalisation !</Text>
+      <Text style={[styles.noPhotoText, { color: theme.textMuted }]}>Soyez le premier à partager votre réalisation !</Text>
     ) : (
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryScroll}>
         {photos.map((item) => (
-          <View key={item.id} style={styles.galleryCard}>
+          <View key={item.id} style={[styles.galleryCard, { backgroundColor: theme.cardBg }]}>
             <Image source={{ uri: item.photo_url }} style={styles.galleryImage} />
-            
-            {/* Bouton supprimer seulement si c'est MA photo */}
             {userId === item.user_id && (
               <TouchableOpacity style={styles.deletePhotoBtn} onPress={() => onDelete(item)}>
                 <Ionicons name="trash" size={16} color="#FF4444" />
               </TouchableOpacity>
             )}
-
             <View style={styles.galleryUserRow}>
               <Image source={{ uri: item.user_avatar || 'https://via.placeholder.com/30' }} style={styles.galleryAvatar} />
-              <Text style={styles.galleryUserName}>{item.user_name || 'Gourmet Anonymous'}</Text>
+              <Text style={[styles.galleryUserName, { color: theme.textSecondary }]}>{item.user_name || 'Gourmet Anonymous'}</Text>
             </View>
           </View>
         ))}
       </ScrollView>
     )}
   </View>
-);
+  );
+};
 
 // --- COMPOSANT PRINCIPAL ---
 const PageRecette = ({ recipe, isMobile, toggleFavorite, isFavorite, selectedCuisine, user }) => {
+  const { theme } = useTheme();
   const contentFade = useRef(new Animated.Value(0)).current;
   const slideIn = useRef(new Animated.Value(30)).current;
   const [photos, setPhotos] = useState([]);
@@ -284,20 +297,20 @@ const PageRecette = ({ recipe, isMobile, toggleFavorite, isFavorite, selectedCui
     <Animated.View style={[styles.container, { opacity: contentFade, transform: [{ translateY: slideIn }] }]}>
       <RecipeHero recipe={recipe} isMobile={isMobile} selectedCuisine={selectedCuisine} toggleFavorite={toggleFavorite} isFavorite={isFavorite} />
       <RecipeRibbon />
-      <Text style={styles.title}>{recipe.name}</Text>
-      <View style={styles.titleDivider} />
+      <Text style={[styles.title, { color: theme.text }]}>{recipe.name}</Text>
+      <View style={[styles.titleDivider, { backgroundColor: theme.secondary }]} />
 
       <TouchableOpacity 
-        style={[styles.cameraButton, uploading && { opacity: 0.5 }]} 
+        style={[styles.cameraButton, { backgroundColor: theme.secondary }, uploading && { opacity: 0.5 }]} 
         onPress={handleCamera}
         disabled={uploading}
       >
         {uploading ? (
-          <ActivityIndicator size="small" color={COLORS.primary} />
+          <ActivityIndicator size="small" color={theme.isDark ? theme.primary : '#FFF'} />
         ) : (
           <>
-            <Ionicons name="camera" size={20} color={COLORS.primary} />
-            <Text style={styles.cameraButtonText}>PARTAGER MA RÉALISATION</Text>
+            <Ionicons name="camera" size={20} color={theme.isDark ? theme.primary : '#FFF'} />
+            <Text style={[styles.cameraButtonText, { color: theme.isDark ? theme.primary : '#FFF' }]}>PARTAGER MA RÉALISATION</Text>
           </>
         )}
       </TouchableOpacity>
@@ -323,32 +336,32 @@ const styles = StyleSheet.create({
   heroFrame: { width: '100%', overflow: 'hidden', position: 'relative' },
   heroImage: { width: '100%', height: '100%' },
   heroShadow: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
-  floatingAction: { position: 'absolute', bottom: -25, right: 32, backgroundColor: COLORS.primary, width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', borderWidth: 0.5, borderColor: COLORS.secondary, elevation: 8 },
+  floatingAction: { position: 'absolute', bottom: -25, right: 32, width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', borderWidth: 0.5, elevation: 8 },
   ribbon: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20, paddingVertical: 60 },
   ribbonItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  ribbonText: { fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: '800', letterSpacing: 2 },
-  ribbonDot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: 'rgba(212, 175, 55, 0.4)' },
-  title: { fontSize: 42, fontWeight: '300', color: '#FFF', textAlign: 'center', paddingHorizontal: 24, fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', letterSpacing: 2, marginBottom: 20 },
-  titleDivider: { width: 40, height: 1, backgroundColor: COLORS.secondary, alignSelf: 'center', marginBottom: 60 },
+  ribbonText: { fontSize: 10, fontWeight: '800', letterSpacing: 2 },
+  ribbonDot: { width: 3, height: 3, borderRadius: 1.5 },
+  title: { fontSize: 42, fontWeight: '300', textAlign: 'center', paddingHorizontal: 24, fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif', letterSpacing: 2, marginBottom: 20 },
+  titleDivider: { width: 40, height: 1, alignSelf: 'center', marginBottom: 60 },
   contentLayout: { paddingHorizontal: 32 },
   desktopRow: { flexDirection: 'row' },
   desktopCol: { flex: 1 },
   section: { marginBottom: 60 },
-  sectionTitle: { fontSize: 18, fontWeight: '300', color: COLORS.secondary, letterSpacing: 4, marginBottom: 32, textTransform: 'uppercase' },
+  sectionTitle: { fontSize: 18, fontWeight: '300', letterSpacing: 4, marginBottom: 32, textTransform: 'uppercase' },
   ingredientsList: { gap: 16 },
   ingredientRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  ingDot: { width: 6, height: 1, backgroundColor: COLORS.secondary },
-  ingText: { color: 'rgba(255,255,255,0.7)', fontSize: 14, fontWeight: '400', lineHeight: 22 },
+  ingDot: { width: 6, height: 1 },
+  ingText: { fontSize: 14, fontWeight: '400', lineHeight: 22 },
   stepBlock: { marginBottom: 40 },
   stepHeader: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 12 },
-  stepIndex: { color: COLORS.secondary, fontSize: 12, fontWeight: '900', letterSpacing: 2 },
-  stepLine: { flex: 1, height: 0.5, backgroundColor: 'rgba(255,255,255,0.05)' },
-  stepContent: { color: 'rgba(255,255,255,0.6)', lineHeight: 28, fontSize: 15, fontWeight: '400' },
-  cameraButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.secondary, paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8, alignSelf: 'center', marginBottom: 40, gap: 10 },
-  cameraButtonText: { color: COLORS.primary, fontWeight: 'bold', letterSpacing: 1 },
+  stepIndex: { fontSize: 12, fontWeight: '900', letterSpacing: 2 },
+  stepLine: { flex: 1, height: 0.5 },
+  stepContent: { lineHeight: 28, fontSize: 15, fontWeight: '400' },
+  cameraButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 24, borderRadius: 8, alignSelf: 'center', marginBottom: 40, gap: 10 },
+  cameraButtonText: { fontWeight: 'bold', letterSpacing: 1 },
   socialSection: { marginTop: 40, paddingHorizontal: 32 },
   galleryScroll: { gap: 16, paddingBottom: 20 },
-  galleryCard: { width: 150, borderRadius: 12, overflow: 'hidden', backgroundColor: '#1A1A1A' },
+  galleryCard: { width: 150, borderRadius: 12, overflow: 'hidden' },
   galleryImage: { width: '100%', height: 150, borderRadius: 8 },
   galleryUserRow: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10 },
   galleryAvatar: { width: 24, height: 24, borderRadius: 12 },

@@ -4,30 +4,39 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { COLORS } from '../../logique/design/couleurs.js';
+import { useTheme } from '../../logique/design/ThemeContext.js';
 
 const Breadcrumbs = ({ page, isMobile, goHome, goCuisines, openCuisine, selectedCuisine, dishName }) => {
+  const { theme } = useTheme();
+
   return (
     <View style={styles.outerContainer}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.container}>
         {/* --- LIEN : RETOUR ACCUEIL --- */}
         <TouchableOpacity onPress={goHome} activeOpacity={0.6}>
-          <Text style={styles.breadcrumbText}>RÉSERVE</Text>
+          <Text style={[styles.breadcrumbText, { color: theme.textLight }]}>RÉSERVE</Text>
         </TouchableOpacity>
 
         {page === 'favorites' && (
           <>
-            <Feather name="chevron-right" size={10} color={COLORS.border} />
-            <Text style={[styles.breadcrumbText, styles.activeText]}>FAVORIS</Text>
+            <Feather name="chevron-right" size={10} color={theme.border} />
+            <Text style={[styles.breadcrumbText, { color: theme.secondary, fontWeight: '900' }]}>FAVORIS</Text>
+          </>
+        )}
+
+        {page === 'notifications' && (
+          <>
+            <Feather name="chevron-right" size={10} color={theme.border} />
+            <Text style={[styles.breadcrumbText, { color: theme.secondary, fontWeight: '900' }]}>NOTIFICATIONS</Text>
           </>
         )}
 
         {/* --- LIEN : EXPLORATION / CUISINES --- */}
         {(page === 'cuisines' || page === 'dishes' || page === 'recipe') && (
           <>
-            <Feather name="chevron-right" size={10} color={COLORS.border} />
+            <Feather name="chevron-right" size={10} color={theme.border} />
             <TouchableOpacity onPress={goCuisines} activeOpacity={0.6}>
-              <Text style={[styles.breadcrumbText, page === 'cuisines' && styles.activeText]}>CUISINES</Text>
+              <Text style={[styles.breadcrumbText, { color: page === 'cuisines' ? theme.secondary : theme.textLight }, page === 'cuisines' && { fontWeight: '900' }]}>CUISINES</Text>
             </TouchableOpacity>
           </>
         )}
@@ -35,9 +44,9 @@ const Breadcrumbs = ({ page, isMobile, goHome, goCuisines, openCuisine, selected
         {/* --- LIEN : PAYS SÉLECTIONNÉ --- */}
         {(page === 'dishes' || page === 'recipe') && selectedCuisine && (
           <>
-            <Feather name="chevron-right" size={10} color={COLORS.border} />
+            <Feather name="chevron-right" size={10} color={theme.border} />
             <TouchableOpacity onPress={() => openCuisine(selectedCuisine)} activeOpacity={0.6}>
-              <Text style={[styles.breadcrumbText, page === 'dishes' && styles.activeText]}>{selectedCuisine.toUpperCase()}</Text>
+              <Text style={[styles.breadcrumbText, { color: page === 'dishes' ? theme.secondary : theme.textLight }, page === 'dishes' && { fontWeight: '900' }]}>{selectedCuisine.toUpperCase()}</Text>
             </TouchableOpacity>
           </>
         )}
@@ -45,9 +54,9 @@ const Breadcrumbs = ({ page, isMobile, goHome, goCuisines, openCuisine, selected
         {/* --- LIEN : PLAT ACTUEL --- */}
         {page === 'recipe' && dishName && (
           <>
-            <Feather name="chevron-right" size={10} color={COLORS.border} />
+            <Feather name="chevron-right" size={10} color={theme.border} />
             <View style={styles.recipeTag}>
-              <Text style={[styles.breadcrumbText, styles.activeText]} numberOfLines={1}>{dishName.toUpperCase()}</Text>
+              <Text style={[styles.breadcrumbText, { color: theme.secondary, fontWeight: '900' }]} numberOfLines={1}>{dishName.toUpperCase()}</Text>
             </View>
           </>
         )}
@@ -67,14 +76,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   breadcrumbText: {
-    color: '#8E8E93',
     fontSize: 9,
     fontWeight: '700',
     letterSpacing: 2,
-  },
-  activeText: {
-    color: COLORS.secondary,
-    fontWeight: '900',
   },
   recipeTag: {
     flexShrink: 1,
@@ -82,5 +86,3 @@ const styles = StyleSheet.create({
 });
 
 export default Breadcrumbs;
-
-

@@ -17,7 +17,8 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
-import { COLORS } from './restaurant/logique/design/couleurs.js';
+
+import { ThemeProvider, useTheme } from './restaurant/logique/design/ThemeContext.js';
 import { getPadding } from './restaurant/logique/outils/affichage.js';
 import useFavorites from './restaurant/logique/gestionnaires/favoris.js';
 import useMealBrowser from './restaurant/logique/gestionnaires/navigation.js';
@@ -32,14 +33,14 @@ import PageRecette from './restaurant/ecrans/PageRecette';
 import PageNotifications from './restaurant/ecrans/PageNotifications';
 import { setupNotifications } from './restaurant/logique/gestionnaires/notifications.js';
 import useAuth from './restaurant/logique/gestionnaires/auth.js';
-import { styles } from './restaurant/logique/styles_globaux/styles_partages.js';
 
-export default function App() {
+function AppContent() {
   const { width: windowWidth } = useWindowDimensions();
   const isMobile = windowWidth < 768;
   const isTablet = windowWidth >= 768 && windowWidth < 1024;
   const [ready, setReady] = useState(false);
   const scrollRef = useRef(null);
+  const { theme, isDark, toggleTheme } = useTheme();
 
   const { user, promptAsync, logout } = useAuth();
 
@@ -91,23 +92,25 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <View style={{ flex: 1 }}>
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       {/* [NAVIGATION GLOBALE] Header fixe + breadcrumb + contenu + navigation bas */}
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.primary} />
       
       <Header 
         isMobile={isMobile} 
         goFavorites={goFavorites} 
         goNotifications={goNotifications} 
-        favCount={favorites.length} 
+        favCount={favorites.length}
+        toggleTheme={toggleTheme}
+        isDark={isDark}
       />
 
       <ScrollView 
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.mainScroll, { paddingBottom: 120 }]}
+        contentContainerStyle={[{ alignSelf: 'center', width: '100%', maxWidth: 1200 }, { paddingBottom: 120 }]}
       >
-        <View style={styles.pageBody}>
+        <View style={{ paddingTop: 100 }}>
           {page !== 'home' && (
             <View style={{ paddingHorizontal: getPadding(isMobile) }}>
               <Breadcrumbs 
@@ -119,16 +122,16 @@ export default function App() {
           )}
 
           {error && (
-            <View style={styles.errorBanner}>
-              <Ionicons name="alert-circle-outline" size={24} color={COLORS.secondary} />
-              <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity onPress={loadContent}><Text style={styles.retryLink}>RÉESSAYER</Text></TouchableOpacity>
+            <View style={{ backgroundColor: `rgba(212, 175, 55, 0.05)`, padding: 20, flexDirection: 'row', alignItems: 'center', gap: 15, borderLeftWidth: 1, borderLeftColor: theme.secondary }}>
+              <Ionicons name="alert-circle-outline" size={24} color={theme.secondary} />
+              <Text style={{ color: theme.text, fontSize: 13 }}>{error}</Text>
+              <TouchableOpacity onPress={loadContent}><Text style={{ color: theme.secondary, fontWeight: '700', textDecorationLine: 'underline', fontSize: 12 }}>RÉESSAYER</Text></TouchableOpacity>
             </View>
           )}
 
           {(initLoading || loading) && (
-            <View style={styles.globalLoader}>
-              <ActivityIndicator size="small" color={COLORS.secondary} />
+            <View style={{ padding: 60, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={theme.secondary} />
             </View>
           )}
 
@@ -205,6 +208,14 @@ export default function App() {
         </SafeAreaView>
       </View>
     </SafeAreaProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 

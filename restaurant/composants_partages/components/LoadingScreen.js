@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, StatusBar, Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS } from '../../logique/design/couleurs.js';
+import { useTheme } from '../../logique/design/ThemeContext.js';
 
 const MESSAGES = [
   "ÉVEIL DES SENS...",
@@ -14,6 +14,7 @@ const MESSAGES = [
 ];
 
 const LoadingScreen = ({ onFinish }) => {
+  const { theme } = useTheme();
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
 
@@ -69,12 +70,12 @@ const LoadingScreen = ({ onFinish }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0B" />
 
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         {/* --- LOGO CENTRAL ANIMÉ --- */}
         <Animated.View style={[styles.logoWrapper, { transform: [{ scale: logoScale }] }]}>
-          <Ionicons name="restaurant-outline" size={56} color={COLORS.secondary} />
+          <Ionicons name="restaurant-outline" size={56} color={theme.secondary} />
           <View style={styles.brandRing} />
         </Animated.View>
 
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
   // --- Fond plein ecran ---
   container: {
     flex: 1,
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#0A0A0B',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 30,
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
   brandName: {
     fontSize: 36,
     fontWeight: '300',
-    color: COLORS.text,
+    color: '#F5F5F0',
     letterSpacing: 12,
     marginBottom: 10,
     fontFamily: 'serif',
@@ -150,12 +151,12 @@ const styles = StyleSheet.create({
   },
   dividerFill: {
     flex: 1,
-    backgroundColor: COLORS.secondary,
+    backgroundColor: '#D4AF37',
   },
   brandTagline: {
     fontSize: 10,
     fontWeight: '600',
-    color: COLORS.secondary,
+    color: '#D4AF37',
     letterSpacing: 6,
     textTransform: 'uppercase',
     marginBottom: 80,
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: COLORS.secondary,
+    backgroundColor: '#D4AF37',
   },
   progressMeta: {
     flexDirection: 'row',
@@ -188,7 +189,7 @@ const styles = StyleSheet.create({
   },
   percentage: {
     fontSize: 12,
-    color: COLORS.secondary,
+    color: '#D4AF37',
     fontWeight: '900',
     fontVariant: ['tabular-nums'],
   },
