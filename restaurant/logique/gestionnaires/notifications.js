@@ -38,9 +38,10 @@ export const setupNotifications = async () => {
     await Notifications.cancelAllScheduledNotificationsAsync();
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: "Saveurs du Monde 🍽️",
-        body: "Il est 16h, découvrez une nouvelle recette !",
+        title: "✨ L'Heure Gourmet de 16h",
+        body: "Votre inspiration culinaire du jour est prête. Quel pays allons-nous explorer aujourd'hui ?",
         data: { screen: 'home' },
+        sound: true,
       },
       trigger: { hour: 16, minute: 0, repeats: true },
     });

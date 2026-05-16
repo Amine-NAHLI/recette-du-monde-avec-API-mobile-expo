@@ -3,7 +3,13 @@
  * Utilise AsyncStorage pour persister le choix de l'utilisateur.
  */
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
+let AsyncStorage;
+try {
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+} catch (e) {
+  AsyncStorage = null;
+}
 
 const DARK = {
   primary: '#0A0A0B',
@@ -53,21 +59,33 @@ const LIGHT = {
   isDark: false,
 };
 
-const ThemeContext = createContext();
+// Valeur par défaut pour éviter les crashes si le contexte n'est pas prêt
+const defaultValue = { theme: DARK, isDark: true, toggleTheme: () => {} };
+const ThemeContext = createContext(defaultValue);
 
 export function ThemeProvider({ children }) {
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
-    AsyncStorage.getItem('theme_mode').then(val => {
-      if (val === 'light') setIsDark(false);
-    }).catch(() => {});
+    try {
+      if (AsyncStorage) {
+        AsyncStorage.getItem('theme_mode').then(val => {
+          if (val === 'light') setIsDark(false);
+        }).catch(() => {});
+      }
+    } catch (e) {
+      console.log('Theme load error:', e);
+    }
   }, []);
 
   const toggleTheme = () => {
     const next = !isDark;
     setIsDark(next);
-    AsyncStorage.setItem('theme_mode', next ? 'dark' : 'light').catch(() => {});
+    try {
+      if (AsyncStorage) {
+        AsyncStorage.setItem('theme_mode', next ? 'dark' : 'light').catch(() => {});
+      }
+    } catch (e) {}
   };
 
   const theme = isDark ? DARK : LIGHT;
@@ -80,5 +98,8 @@ export function ThemeProvider({ children }) {
 }
 
 export function useTheme() {
-  return useContext(ThemeContext);
+  const ctx = useContext(ThemeContext);
+  // Sécurité : retourner les valeurs par défaut si le contexte est vide
+  if (!ctx || !ctx.theme) return defaultValue;
+  return ctx;
 }

@@ -192,7 +192,7 @@ function AppContent() {
           )}
 
           {page === 'notifications' && (
-            <PageNotifications isMobile={isMobile} />
+            <PageNotifications isMobile={isMobile} user={user} />
           )}
         </View>
       </ScrollView>
