@@ -216,56 +216,65 @@ const PageRecette = ({ recipe, isMobile, toggleFavorite, isFavorite, selectedCui
     if (!user) return;
     setUploading(true);
     try {
-      console.log("1. Lecture du fichier via FileSystem, URI:", uri);
+      console.log("--- DÉBUT UPLOAD ---");
+      console.log("URI source:", uri);
       
-      const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+      // 1. Lecture du fichier (Compatible Web & Mobile)
+      let fileBody;
+      if (Platform.OS === 'web') {
+        const response = await fetch(uri);
+        fileBody = await response.blob();
+      } else {
+        const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+        fileBody = decode(base64);
+      }
       
-      // Conversion Base64 -> Blob (le plus fiable sur Android)
-      const arrayBuffer = decode(base64);
-      const blob = new Blob([arrayBuffer], { type: 'image/jpeg' });
-
-      console.log("2. Image convertie en Blob avec succès");
-      
-      const fileExt = uri.split('.').pop().split('?')[0];
-      const fileName = `${Date.now()}.${fileExt}`;
+      // 2. Création du fichier pour Supabase
+      const fileName = `${Date.now()}.jpg`;
       const filePath = `${user.id}/${fileName}`;
 
-      console.log("3. Tentative d'upload vers Supabase Storage, chemin:", filePath);
-
+      console.log("Tentative d'envoi vers Storage bucket 'recipe-images'...");
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('recipe-images')
-        .upload(filePath, blob, {
+        .upload(filePath, fileBody, {
           contentType: 'image/jpeg',
           upsert: true
         });
 
       if (uploadError) {
-        console.error("4. ERREUR STORAGE SUPABASE:", uploadError);
-        throw new Error(uploadError.message);
+        console.error("Erreur Storage:", uploadError);
+        throw new Error(`Erreur de stockage: ${uploadError.message}`);
       }
 
-      console.log("5. Upload Storage réussi:", uploadData);
+      // 3. Récupération de l'URL publique
       const { data: { publicUrl } } = supabase.storage
         .from('recipe-images')
         .getPublicUrl(filePath);
 
-      // 4. Enregistrer dans la base SQL
+      console.log("URL générée:", publicUrl);
+
+      // 4. Insertion en base de données
       const { error: dbError } = await supabase
         .from('recipe_photos')
         .insert({
-          meal_id: recipe.idMeal,
+          meal_id: String(recipe.idMeal),
           user_id: user.id,
           user_name: user.user_metadata?.full_name || user.email,
           user_avatar: user.user_metadata?.avatar_url,
           photo_url: publicUrl
         });
 
-      if (dbError) throw new Error(dbError.message);
+      if (dbError) {
+        console.error("Erreur Base de données:", dbError);
+        throw new Error(`Erreur DB: ${dbError.message}`);
+      }
 
-      fetchPhotos();
+      console.log("--- UPLOAD RÉUSSI ---");
+      Alert.alert("Succès", "Votre photo a été partagée !");
+      fetchPhotos(); // Rechargement de la galerie
     } catch (err) {
-      console.error("ERREUR:", err);
-      Alert.alert("Erreur d'envoi", err.message);
+      console.error("ERREUR GLOBALE UPLOAD:", err);
+      Alert.alert("Erreur", err.message);
     } finally {
       setUploading(false);
     }

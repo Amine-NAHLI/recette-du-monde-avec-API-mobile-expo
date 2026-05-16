@@ -1,6 +1,12 @@
 /** GET un plat par id ; pour buildRecipeDetails + cache recette. */
 export const fetchRecipeById = async (id) => {
-  const res = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
-  const data = await res.json();
-  return data.meals?.[0];
+  try {
+    const res = await fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
+    if (!res.ok) throw new Error("Erreur réseau");
+    const data = await res.json();
+    return data.meals?.[0];
+  } catch (error) {
+    console.error(`fetchRecipeById (${id}) error:`, error);
+    return null;
+  }
 };

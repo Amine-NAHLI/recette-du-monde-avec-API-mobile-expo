@@ -2,10 +2,12 @@
 export const fetchDishesByCountry = async (area) => {
   try {
     const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?a=${area}`);
+    if (!res.ok) throw new Error("Erreur réseau");
     const data = await res.json();
     const dishes = data.meals || [];
     return dishes.map((dish) => ({ ...dish, area }));
   } catch (e) {
+    console.error(`fetchDishesByCountry (${area}) error:`, e);
     return [];
   }
 };
@@ -14,9 +16,11 @@ export const fetchDishesByCountry = async (area) => {
 export const fetchByCategory = async (cat) => {
   try {
     const res = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${cat}`);
+    if (!res.ok) throw new Error("Erreur réseau");
     const data = await res.json();
     return data.meals || [];
   } catch (e) {
+    console.error(`fetchByCategory (${cat}) error:`, e);
     return [];
   }
 };
