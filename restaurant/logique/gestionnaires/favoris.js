@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../appels_api/supabase';
 
@@ -49,14 +49,19 @@ export default function useFavorites(promptAsync) {
   /** Ajoute ou retire un plat identifie par idMeal. */
   const toggleFavorite = async (meal) => {
     if (!user) {
-      Alert.alert(
-        "Action Impossible",
-        "Vous devez vous connecter avec Google pour ajouter des favoris.",
-        [
-          { text: "Plus tard", style: "cancel" },
-          { text: "Se connecter", onPress: () => promptAsync?.() }
-        ]
-      );
+      if (Platform.OS === 'web') {
+        const confirmLogin = window.confirm("✨ Action Réservée : Voulez-vous vous connecter pour sauvegarder vos recettes préférées ?");
+        if (confirmLogin) promptAsync?.();
+      } else {
+        Alert.alert(
+          "✨ Action Réservée",
+          "La gestion des favoris est réservée aux Membres Gourmet. Connectez-vous pour sauvegarder vos recettes préférées !",
+          [
+            { text: "Plus tard", style: "cancel" },
+            { text: "Se connecter", onPress: () => promptAsync?.() }
+          ]
+        );
+      }
       return;
     }
 

@@ -1,9 +1,40 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../logique/design/couleurs.js';
 
 const PageNotifications = ({ isMobile }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    const calculateTime = () => {
+      const now = new Date();
+      const target = new Date();
+      target.setHours(16, 0, 0, 0);
+
+      // Si il est déjà passé 16h, on cible 16h demain
+      if (now > target) {
+        target.setDate(target.getDate() + 1);
+      }
+
+      const diff = target - now;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeLeft(
+        `${hours.toString().padStart(2, '0')}:${minutes
+          .toString()
+          .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+      );
+    };
+
+    const timer = setInterval(calculateTime, 1000);
+    calculateTime(); // Appel initial
+
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
@@ -12,15 +43,24 @@ const PageNotifications = ({ isMobile }) => {
         <Text style={styles.subtitle}>Gérez vos rappels et actualités</Text>
       </View>
 
+      {/* COMPTE À REBOURS PREMIUM */}
+      <View style={styles.timerSection}>
+        <Text style={styles.timerLabel}>PROCHAINE RECETTE DANS</Text>
+        <Text style={styles.timerValue}>{timeLeft}</Text>
+        <View style={styles.timerBarContainer}>
+          <View style={styles.timerBarActive} />
+        </View>
+      </View>
+
       <View style={styles.notifCard}>
         <View style={styles.iconCircle}>
           <Ionicons name="time-outline" size={24} color={COLORS.secondary} />
         </View>
         <View style={styles.notifContent}>
           <Text style={styles.notifTitle}>Rappel Quotidien Activé</Text>
-          <Text style={styles.notifDesc}>Chaque jour à 16:00 : "N'oubliez pas votre recette du monde"</Text>
+          <Text style={styles.notifDesc}>Chaque jour à 16:00 : "Il est temps de découvrir votre nouvelle saveur du monde."</Text>
           <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>PLANIFIÉ</Text>
+            <Text style={styles.statusText}>PROGRAMMÉ</Text>
           </View>
         </View>
       </View>
@@ -30,9 +70,8 @@ const PageNotifications = ({ isMobile }) => {
           <Ionicons name="gift-outline" size={24} color="#666" />
         </View>
         <View style={styles.notifContent}>
-          <Text style={[styles.notifTitle, { color: '#888' }]}>Offre de Bienvenue</Text>
-          <Text style={styles.notifDesc}>Merci d'avoir rejoint Saveurs du Monde !</Text>
-          <Text style={styles.timeAgo}>Il y a 2 jours</Text>
+          <Text style={[styles.notifTitle, { color: '#888' }]}>Bienvenue sur Saveurs du Monde</Text>
+          <Text style={styles.notifDesc}>Explorez des milliers de recettes internationales dès maintenant.</Text>
         </View>
       </View>
     </ScrollView>
@@ -44,6 +83,21 @@ const styles = StyleSheet.create({
   header: { alignItems: 'center', marginBottom: 40, marginTop: 20 },
   title: { color: '#FFF', fontSize: 24, fontWeight: '300', marginTop: 16, letterSpacing: 2 },
   subtitle: { color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 8 },
+  
+  timerSection: {
+    backgroundColor: 'rgba(212, 175, 55, 0.05)',
+    borderRadius: 20,
+    padding: 30,
+    alignItems: 'center',
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.2)',
+  },
+  timerLabel: { color: COLORS.secondary, fontSize: 10, fontWeight: '800', letterSpacing: 3, marginBottom: 15 },
+  timerValue: { color: '#FFF', fontSize: 42, fontWeight: '200', letterSpacing: 5, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace' },
+  timerBarContainer: { width: '100%', height: 2, backgroundColor: 'rgba(255,255,255,0.1)', marginTop: 20, borderRadius: 1 },
+  timerBarActive: { width: '60%', height: '100%', backgroundColor: COLORS.secondary },
+
   notifCard: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.03)',
@@ -75,7 +129,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   statusText: { color: COLORS.primary, fontSize: 9, fontWeight: '900' },
-  timeAgo: { color: 'rgba(255,255,255,0.2)', fontSize: 11, marginTop: 8 },
 });
 
 export default PageNotifications;
