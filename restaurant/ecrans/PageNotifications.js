@@ -2,13 +2,40 @@
  * PAGE NOTIFICATIONS - Avec compte à rebours temps réel et support thème.
  */
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, Text, View, ScrollView, Platform, TouchableOpacity } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../logique/design/ThemeContext.js';
+import { sendEmail } from '../logique/gestionnaires/email.js';
+import { Alert, ActivityIndicator } from 'react-native';
 
-const PageNotifications = ({ isMobile }) => {
+const PageNotifications = ({ isMobile, user }) => {
   const { theme } = useTheme();
   const [timeLeft, setTimeLeft] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [sentSuccess, setSentSuccess] = useState(false);
+
+  const handleTestEmail = async () => {
+    if (!user) {
+      Alert.alert("Connexion Requise", "Veuillez vous connecter pour tester l'envoi d'email.");
+      return;
+    }
+
+    setIsSending(true);
+    setSentSuccess(false);
+
+    // On envoie juste l'email et le nom, EmailJS s'occupe du reste !
+    const userName = user.user_metadata?.full_name || user.email.split('@')[0];
+    const result = await sendEmail(user.email, userName);
+    
+    setIsSending(false);
+    if (result.success) {
+      setSentSuccess(true);
+      setTimeout(() => setSentSuccess(false), 5000);
+      Alert.alert("Succès ! 🍽️", `Email envoyé à ${user.email}. Vérifiez votre boîte de réception !`);
+    } else {
+      Alert.alert("Erreur ❌", "Impossible d'envoyer l'email via EmailJS. Vérifiez votre configuration.");
+    }
+  };
 
   useEffect(() => {
     const calculateTime = () => {
@@ -55,17 +82,38 @@ const PageNotifications = ({ isMobile }) => {
         </View>
       </View>
 
-      <View style={[styles.notifCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <View style={[styles.iconCircle, { backgroundColor: theme.isDark ? 'rgba(212, 175, 55, 0.1)' : 'rgba(184, 134, 11, 0.1)' }]}>
-          <Ionicons name="time-outline" size={24} color={theme.secondary} />
-        </View>
-        <View style={styles.notifContent}>
-          <Text style={[styles.notifTitle, { color: theme.text }]}>Rappel Quotidien Activé</Text>
-          <Text style={[styles.notifDesc, { color: theme.textSecondary }]}>Chaque jour à 16:00 : "Il est temps de découvrir votre nouvelle saveur du monde."</Text>
-          <View style={[styles.statusBadge, { backgroundColor: theme.secondary }]}>
-            <Text style={[styles.statusText, { color: theme.isDark ? theme.primary : '#FFF' }]}>PROGRAMMÉ</Text>
+      {/* SECTION EMAIL TEST */}
+      <View style={[styles.emailSection, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={styles.emailHeader}>
+          <MaterialCommunityIcons name="email-check-outline" size={24} color={theme.secondary} />
+          <View>
+            <Text style={[styles.notifTitle, { color: theme.text }]}>Notifications par Email</Text>
+            <Text style={[styles.notifDesc, { color: theme.textSecondary }]}>Testez l'envoi vers : {user?.email || 'votre email'}</Text>
           </View>
         </View>
+        <TouchableOpacity 
+          key="email-test-button"
+          style={[styles.testBtn, { backgroundColor: sentSuccess ? '#4CAF50' : theme.secondary }]} 
+          onPress={handleTestEmail}
+          disabled={isSending || sentSuccess}
+        >
+          {isSending ? (
+            <ActivityIndicator key="loader" color="#FFF" size="small" />
+          ) : (
+            <Text style={[styles.testBtnText, { color: theme.isDark ? theme.primary : '#FFF' }]}>
+              {sentSuccess ? 'EMAIL ENVOYÉ ! ✅' : 'ENVOYER UN TEST MAINTENANT'}
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        {sentSuccess && (
+          <View style={styles.successMessage}>
+            <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+            <Text style={{ color: '#4CAF50', fontSize: 12, fontWeight: '600' }}>
+              Vérifiez votre boîte de réception !
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={[styles.notifCard, { backgroundColor: theme.card, borderColor: theme.border, opacity: 0.5 }]}>
@@ -118,6 +166,33 @@ const styles = StyleSheet.create({
   notifContent: { flex: 1 },
   notifTitle: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
   notifDesc: { fontSize: 13, lineHeight: 18 },
+  emailSection: {
+    padding: 20,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    marginBottom: 24,
+    gap: 20,
+  },
+  emailHeader: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  testBtn: {
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  testBtnText: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+  },
+  successMessage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: -10,
+    paddingBottom: 10,
+  },
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
