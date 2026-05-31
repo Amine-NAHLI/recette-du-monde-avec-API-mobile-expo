@@ -14,9 +14,10 @@
         "backgroundColor": "#0A0A0B"
       }
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": []
+    "web": {},
+    "plugins": [
+      "expo-font",
+      "expo-web-browser"
+    ]
   }
 }
